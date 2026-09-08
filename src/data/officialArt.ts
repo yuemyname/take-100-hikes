@@ -35,23 +35,27 @@ export const OFFICIAL_CHARACTERS = {
   ],
 } as const;
 
-/** Contextual official graphic/sticker assets. Use sparingly as collage accents. */
+/**
+ * Contextual official graphic/sticker assets.
+ * ASCII aliases under assets/official/stickers point to the original uploaded blobs;
+ * the original Korean-named files remain untouched.
+ */
 export const OFFICIAL_STICKERS = {
-  freshAir: require('../../assets/official/a.공기맛집.PNG'),
-  wantToGoHome: require('../../assets/official/a.나집에갈래.PNG'),
-  didIt: require('../../assets/official/a.내가해냄.PNG'),
-  neverAgain: require('../../assets/official/a.다시는-안와.PNG'),
-  safeDescent: require('../../assets/official/a.무사하산.PNG'),
-  water: require('../../assets/official/a.물.PNG'),
-  mountain: require('../../assets/official/a.산.PNG'),
-  saveMe: require('../../assets/official/a.살려주세요.PNG'),
-  summitToday: require('../../assets/official/a.오늘도-완등.PNG'),
-  summitSuccess: require('../../assets/official/a.완등성공.PNG'),
-  thisIsWhyIHike: require('../../assets/official/a.이맛에등산함.PNG'),
-  summitCheck: require('../../assets/official/a.정상접수.PNG'),
-  lowBattery: require('../../assets/official/a.체력방전.PNG'),
-  flatGroundBest: require('../../assets/official/a.평지가최고.PNG'),
-  sun: require('../../assets/official/a.해.PNG'),
+  freshAir: require('../../assets/official/stickers/fresh-air.png'),
+  wantToGoHome: require('../../assets/official/stickers/want-to-go-home.png'),
+  didIt: require('../../assets/official/stickers/did-it.png'),
+  neverAgain: require('../../assets/official/stickers/never-again.png'),
+  safeDescent: require('../../assets/official/stickers/safe-descent.png'),
+  water: require('../../assets/official/stickers/water.png'),
+  mountain: require('../../assets/official/stickers/mountain.png'),
+  saveMe: require('../../assets/official/stickers/save-me.png'),
+  summitToday: require('../../assets/official/stickers/summit-today.png'),
+  summitSuccess: require('../../assets/official/stickers/summit-success.png'),
+  thisIsWhyIHike: require('../../assets/official/stickers/why-i-hike.png'),
+  summitCheck: require('../../assets/official/stickers/summit-check.png'),
+  lowBattery: require('../../assets/official/stickers/low-battery.png'),
+  flatGroundBest: require('../../assets/official/stickers/flat-ground-best.png'),
+  sun: require('../../assets/official/stickers/sun.png'),
 } as const;
 
 /** Default hero actor for the first concept-matching home pass. */
