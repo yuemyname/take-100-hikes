@@ -4,9 +4,10 @@ import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, Avatar, EmptyState, LoadingSkeleton, MountainPhoto, ProgressCounter, formatCertifiedDate } from '@/components/ui';
+import { AppText, Avatar, CollectionSwitcher, EmptyState, LoadingSkeleton, MountainPhoto, ProgressCounter, formatCertifiedDate } from '@/components/ui';
 import { colors, radii, spacing } from '@/constants';
 import { OFFICIAL_STICKERS } from '@/data/officialArt';
+import { completedCountForCollection, getCollection, usePrimaryCollection } from '@/features/collections';
 import { countByRegion, useMountains } from '@/features/mountains';
 import { useCompletedMountains, useProfileStats } from '@/features/social';
 import type { Profile } from '@/types';
@@ -17,22 +18,27 @@ export interface ProfileBodyProps {
   showCaption?: boolean;
 }
 
-/**
- * Profile content shared by MY and friend pages.
- * Mountains and shared memories are the collection. Brand characters are not
- * unlocked per mountain and are intentionally absent from mountain history.
- */
 export function ProfileBody({ user, action, showCaption = false }: ProfileBodyProps) {
   const router = useRouter();
   const name = user.display_name ?? user.username;
   const mountains = useMountains();
   const completed = useCompletedMountains(user.id);
   const stats = useProfileStats(user.id);
+  const { id: primaryCollectionId, collection: primaryCollection } = usePrimaryCollection();
 
   const mountainById = useMemo(() => new Map((mountains.data ?? []).map((m) => [m.id, m])), [mountains.data]);
   const completedIds = useMemo(() => new Set((completed.data ?? []).map((c) => c.mountainId)), [completed.data]);
   const regions = useMemo(() => countByRegion(mountains.data ?? [], completedIds), [mountains.data, completedIds]);
   const count = completed.data?.length ?? 0;
+  const forestCount = useMemo(
+    () => completedCountForCollection(mountains.data ?? [], completedIds, 'forest_service_100'),
+    [mountains.data, completedIds],
+  );
+  const bacCount = useMemo(
+    () => completedCountForCollection(mountains.data ?? [], completedIds, 'bac_100'),
+    [mountains.data, completedIds],
+  );
+  const primaryCount = primaryCollectionId === 'bac_100' ? bacCount : forestCount;
 
   return (
     <View>
@@ -54,20 +60,37 @@ export function ProfileBody({ user, action, showCaption = false }: ProfileBodyPr
         {action}
       </View>
 
+      {showCaption ? (
+        <View style={styles.switcher}>
+          <AppText variant="heading3">대표 챌린지</AppText>
+          <CollectionSwitcher showDescription />
+        </View>
+      ) : null}
+
       <View style={styles.progressCard}>
         <View style={styles.progressCopy}>
-          {completed.isLoading ? (
+          <AppText variant="caption" weight="700" color="inkMuted">{primaryCollection.shortName}</AppText>
+          {completed.isLoading || mountains.isLoading ? (
             <LoadingSkeleton height={38} width="70%" />
           ) : (
             <ProgressCounter
-              completed={count}
+              completed={primaryCount}
               size="md"
-              caption={showCaption ? (count === 0 ? '첫 번째 산은 어디로 갈 건데?' : `아직 ${100 - count}개나 남았는데?`) : undefined}
+              caption={showCaption ? (primaryCount === 0 ? '첫 번째 산은 어디로 갈 건데?' : `아직 ${100 - primaryCount}개나 남았는데?`) : undefined}
             />
           )}
         </View>
-        <Image source={count >= 100 ? OFFICIAL_STICKERS.summitSuccess : OFFICIAL_STICKERS.mountain} contentFit="contain" style={styles.progressSticker} accessibilityLabel="100PEAKS 진행 스티커" />
+        <Image source={primaryCount >= 100 ? OFFICIAL_STICKERS.summitSuccess : OFFICIAL_STICKERS.mountain} contentFit="contain" style={styles.progressSticker} accessibilityLabel="100PEAKS 진행 스티커" />
       </View>
+
+      <AppText variant="heading3" style={styles.sectionTitle}>두 컬렉션 진행</AppText>
+      <View style={styles.collectionProgressRow}>
+        <CollectionProgressCard label={getCollection('forest_service_100').shortName} count={forestCount} tone={colors.blue} />
+        <CollectionProgressCard label={getCollection('bac_100').shortName} count={bacCount} tone={colors.red} />
+      </View>
+      <AppText variant="caption" color="inkMuted" style={styles.collectionHint}>
+        한 번 인증한 산은 해당되는 모든 컬렉션에 자동으로 반영돼요.
+      </AppText>
 
       <AppText variant="heading3" style={styles.sectionTitle}>지역별 진행</AppText>
       <View style={styles.card}>
@@ -141,6 +164,16 @@ function Count({ label, value }: { label: string; value?: number }) {
   );
 }
 
+function CollectionProgressCard({ label, count, tone }: { label: string; count: number; tone: string }) {
+  return (
+    <View style={styles.collectionCard} accessible accessibilityLabel={`${label} ${count} / 100`}>
+      <View style={[styles.collectionDot, { backgroundColor: tone }]} />
+      <AppText variant="caption" weight="700">{label}</AppText>
+      <AppText variant="heading2">{count}<AppText variant="bodySmall" color="inkMuted"> / 100</AppText></AppText>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   header: { alignItems: 'center', marginTop: spacing.lg },
   avatarWrap: { position: 'relative' },
@@ -150,10 +183,15 @@ const styles = StyleSheet.create({
   counts: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.lg, gap: spacing.lg },
   count: { alignItems: 'center', minWidth: 56 },
   countDivider: { width: 1, height: 24, backgroundColor: colors.border },
-  progressCard: { position: 'relative', minHeight: 132, marginVertical: spacing.xxl, backgroundColor: colors.yellow, borderRadius: radii.cardLarge, padding: spacing.xl, overflow: 'hidden', justifyContent: 'center' },
-  progressCopy: { width: '72%', zIndex: 2 },
+  switcher: { marginTop: spacing.xxl, gap: spacing.sm },
+  progressCard: { position: 'relative', minHeight: 132, marginVertical: spacing.xl, backgroundColor: colors.yellow, borderRadius: radii.cardLarge, padding: spacing.xl, overflow: 'hidden', justifyContent: 'center' },
+  progressCopy: { width: '72%', zIndex: 2, gap: spacing.xxs },
   progressSticker: { position: 'absolute', width: 110, height: 90, right: spacing.sm, bottom: -4, transform: [{ rotate: '-6deg' }] },
   sectionTitle: { marginTop: spacing.lg, marginBottom: spacing.sm },
+  collectionProgressRow: { flexDirection: 'row', gap: spacing.md },
+  collectionCard: { flex: 1, minHeight: 110, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, borderRadius: radii.card, padding: spacing.md, gap: spacing.xs },
+  collectionDot: { width: 10, height: 10, borderRadius: 5 },
+  collectionHint: { marginTop: spacing.sm },
   card: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, borderRadius: radii.card, padding: spacing.lg, gap: spacing.md },
   regionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
   regionRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
