@@ -1,6 +1,6 @@
 # Agent instructions for 100PEAKS
 
-This repository implements **100PEAKS** (백픽스), a social collectible app for completing Korea's 100 famous mountains.
+This repository implements **100PEAKS** (백픽스), a social collectible app for completing Korea's famous mountain challenges.
 
 These instructions apply to every coding agent (Claude Code, Codex, Cursor, ChatGPT, ...).
 `CLAUDE.md` imports this file, so keep all shared agent rules here and do not duplicate them elsewhere.
@@ -9,8 +9,9 @@ These instructions apply to every coding agent (Claude Code, Codex, Cursor, Chat
 
 Read `100PEAKS_MASTER_SPEC.md` completely before making any product, UI, database, architecture, or implementation decision.
 Also read `docs/OFFICIAL_VISUAL_DIRECTION.md` before any UI or asset work. For the newer character/art-direction decisions in that document, it overrides older mascot-collection language in the master spec until the master spec is fully normalized.
+Also read `docs/COLLECTIONS.md` before mountain-list, progress, onboarding, profile, or certification-count work. The multi-collection rules there override older language that assumes one canonical 100-mountain list.
 
-The master spec remains the single source of truth for product behavior, navigation, data model, social rules, shared certification, implementation phases, and acceptance criteria.
+The master spec remains the single source of truth for product behavior, navigation, social rules, shared certification, implementation phases, and acceptance criteria except where the newer visual/collection decision documents explicitly override older assumptions.
 
 ## 2. Non-negotiable product rules
 
@@ -20,11 +21,18 @@ The master spec remains the single source of truth for product behavior, navigat
 - Shared certification is one real multi-user `certification_session` with members. It is never post-upload friend tagging.
 - Only mutual-follow friends may be invited to shared certification.
 - For MVP, each confirmed participant must independently pass summit GPS proximity.
-- The collectible object is the **100 mountains / mountain certifications**, not characters.
+- The collectible object is **mountain certifications / challenge progress**, not characters.
+- 100PEAKS supports at least two challenge collections: `forest_service_100` (산림청 100대 명산) and `bac_100` (BAC 명산100 기준).
+- Users may change their primary collection at any time. Switching must never delete, reset, or duplicate certification records.
+- A single confirmed summit record may count toward every collection containing that mountain when the relevant verification rule is satisfied.
+- Never create separate duplicate certification sessions just because one mountain belongs to multiple collections.
+- Mountain identity, collection membership, and GPS verification point are separate concepts. Follow `docs/COLLECTIONS.md`.
+- For BAC data, read `docs/data/BAC100_DATA_POLICY.md` and `docs/data/bac100-candidates.csv`. Never invent or approximate pending verification-point coordinates.
 - The official recurring brand cast is the four color families in `assets/official/` whose filenames contain `Take a Hike_Character`: YELLOW, RED, BLUE, PINK. Their multiple numbered files are pose/variant artwork of the same four-character cast.
 - Do **not** assign one unique character to each mountain and do not create a 100-character collection system.
 - `assets/mascots/` must be preserved. It is an experimental/supporting character library for possible future reuse, easter eggs, seasonal content, empty states, etc. Do not delete it and do not treat it as the primary official cast.
 - `assets/official/stickers/` contains stable ASCII aliases of the uploaded situational graphics. Use these selectively as collage/sticker accents appropriate to the screen state.
+- Do not imply an official BLACKYAK/BAC partnership or copy BAC logos/brand visuals without permission.
 - Do not redesign the product from scratch.
 - Do not replace the playful cream + saturated primary-color system with generic hiking / fitness green.
 - Do not copy Netflix logos, typography, title art, or exact characters from reference material.
@@ -94,6 +102,8 @@ Before declaring work complete:
 - verify mutual-first sorting where applicable,
 - verify no service-role key or secret was committed,
 - verify no UI reintroduced a mountain-specific mascot collection,
+- verify challenge switching does not mutate or reset certification records,
+- verify progress is derived from collection membership rather than duplicated summit data,
 - compare touched screens against the original UI concept image.
 
 ## 8. Definition of done
@@ -107,7 +117,9 @@ Do not claim a feature is complete if:
 - mock data contradicts across screens,
 - design tokens are bypassed by random hard-coded colors,
 - required loading / error states are missing,
-- official characters were replaced by generated mountain-specific mascots.
+- official characters were replaced by generated mountain-specific mascots,
+- changing the primary collection loses existing summit history,
+- pending BAC coordinates are activated as if verified.
 
 After coding, report:
 
@@ -120,4 +132,4 @@ After coding, report:
 
 ## 9. Default starting behavior
 
-If the user simply says "start", "implement it", or gives no narrower task, inspect the repository against the master spec and current official visual direction, preserve completed functional phases, and work on the highest-impact incomplete or visually divergent item. Do not restart working product flows just to produce screenshots.
+If the user simply says "start", "implement it", or gives no narrower task, inspect the repository against the master spec plus `docs/OFFICIAL_VISUAL_DIRECTION.md` and `docs/COLLECTIONS.md`, preserve completed functional phases, and work on the highest-impact incomplete or visually divergent item. Do not restart working product flows just to produce screenshots.
