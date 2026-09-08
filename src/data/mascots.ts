@@ -2,39 +2,39 @@ import type { MascotEyes, MascotLook, MascotPose, MascotProp } from '@/component
 import { colors, illustration } from '@/constants';
 
 /**
- * Official raster mascot artwork lives in /assets.
+ * Official raster mascot artwork lives in /assets/mascots.
  * The seven approved characters below MUST render their image asset first.
  * Procedural SVG styling remains only as a fallback for mountains that do not
  * yet have official artwork.
  */
 const CURATED: Record<string, MascotLook> = {
   seoraksan: {
-    image: require('../../assets/seoraksan.png'),
+    image: require('../../assets/mascots/seoraksan.png'),
     body: colors.red, patch: colors.surface, face: illustration.faceCream,
     eyes: 'wide', pose: 'wave', prop: 'none', accent: colors.blue,
   },
   hallasan: {
-    image: require('../../assets/hallasan.png'),
+    image: require('../../assets/mascots/hallasan.png'),
     body: colors.blue, patch: colors.surface, face: illustration.faceCream,
     eyes: 'dots', pose: 'wave', prop: 'none', accent: colors.yellow,
   },
   bukhansan: {
-    image: require('../../assets/bukhansan.png'),
+    image: require('../../assets/mascots/bukhansan.png'),
     body: colors.green, patch: colors.surface, face: illustration.faceCream,
     eyes: 'wide', pose: 'sit', prop: 'none', accent: colors.yellow,
   },
   jirisan: {
-    image: require('../../assets/jirisan.png'),
+    image: require('../../assets/mascots/jirisan.png'),
     body: colors.pink, patch: colors.surface, face: illustration.faceCream,
     eyes: 'sleepy', pose: 'sit', prop: 'none', accent: colors.green,
   },
   deogyusan: {
-    image: require('../../assets/deogyusan.png'),
+    image: require('../../assets/mascots/deogyusan.png'),
     body: colors.surface, patch: colors.surfaceMuted, face: illustration.faceCream,
     eyes: 'goggles', pose: 'wave', prop: 'none', accent: colors.blue,
   },
   sobaeksan: {
-    image: require('../../assets/sobaeksan.png'),
+    image: require('../../assets/mascots/sobaeksan.png'),
     body: colors.pink, patch: colors.surface, face: illustration.faceCream,
     eyes: 'dots', pose: 'cheer', prop: 'none', accent: colors.red,
   },
@@ -78,7 +78,7 @@ export function getMascotLook(mascotKey: string | null | undefined): MascotLook 
 
 /** Official yellow Guide artwork. */
 export const GUIDE_MASCOT: MascotLook = {
-  image: require('../../assets/guide.png'),
+  image: require('../../assets/mascots/guide.png'),
   body: colors.yellow,
   patch: colors.surface,
   face: illustration.faceCream,
