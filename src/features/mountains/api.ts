@@ -51,7 +51,7 @@ export async function fetchMountain(id: string): Promise<Mountain | null> {
  */
 export async function fetchCompletedMountainIds(userId: string | null): Promise<Set<string>> {
   if (!isSupabaseConfigured || !userId) {
-    return new Set(LOCAL_MOUNTAINS.filter((m) => (DEMO_COMPLETED_SLUGS as readonly string[]).includes(m.slug)).map((m) => m.id));
+    return new Set(LOCAL_MOUNTAINS.filter((m) => DEMO_COMPLETED_SLUGS.includes(m.slug)).map((m) => m.id));
   }
   const { data, error } = await getSupabase()
     .from('certification_members')

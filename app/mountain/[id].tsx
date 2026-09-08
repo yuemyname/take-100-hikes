@@ -15,9 +15,11 @@ import {
   SegmentedControl,
   SpeechBubble,
 } from '@/components/ui';
+import { CertifiedUsersSection } from '@/components/social/CertifiedUsersSection';
 import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
 import { getMascotLook } from '@/data/mascots';
 import { getSeedArea, useCompletedMountainIds, useFavorites, useMountain } from '@/features/mountains';
+import { useCertifiedUsers } from '@/features/social';
 
 type DetailTab = 'intro' | 'people';
 
@@ -31,6 +33,8 @@ export default function MountainDetailScreen() {
   const mountain = useMountain(id);
   const completedQuery = useCompletedMountainIds();
   const { favorites, toggle, isToggling } = useFavorites();
+  const certifiers = useCertifiedUsers(mountain.data?.id);
+  const certifierCount = certifiers.data?.total;
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/mountains'));
 
@@ -114,7 +118,7 @@ export default function MountainDetailScreen() {
             <SegmentedControl<DetailTab>
               options={[
                 { key: 'intro', label: '소개' },
-                { key: 'people', label: '인증자' },
+                { key: 'people', label: certifierCount === undefined ? '인증자' : `인증자 (${certifierCount.toLocaleString('ko-KR')})` },
               ]}
               value={tab}
               onChange={setTab}
@@ -131,10 +135,7 @@ export default function MountainDetailScreen() {
               </View>
             </View>
           ) : (
-            <EmptyState
-              title="아직 이 산을 인증한 친구가 없어요."
-              description="먼저 다녀와서 자랑해볼까요?"
-            />
+            <CertifiedUsersSection mountainId={m.id} />
           )}
         </View>
       </ScrollView>

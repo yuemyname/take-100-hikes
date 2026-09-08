@@ -21,3 +21,6 @@ export { SegmentedControl, type SegmentedControlProps } from './SegmentedControl
 export { CheckBadge, type CheckBadgeProps } from './CheckBadge';
 export { FavoriteButton, type FavoriteButtonProps } from './FavoriteButton';
 export { MountainCard, type MountainCardProps } from './MountainCard';
+export { FollowButton, type FollowButtonProps } from './FollowButton';
+export { UserRow, type UserRowProps } from './UserRow';
+export { CertifiedUserRow, formatCertifiedDate, type CertifiedUserRowProps } from './CertifiedUserRow';
