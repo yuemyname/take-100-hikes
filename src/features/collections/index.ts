@@ -34,15 +34,19 @@ export const COLLECTIONS: readonly CollectionDefinition[] = [
 const STORAGE_KEY = '100peaks.primaryCollection';
 const queryKey = ['primaryCollection'] as const;
 
+type StoredSelection = { id: CollectionId; hasChosen: boolean };
+
 export const getCollection = (id: CollectionId) => COLLECTIONS.find((c) => c.id === id) ?? COLLECTIONS[0];
 
 export function usePrimaryCollection() {
   const queryClient = useQueryClient();
   const selected = useQuery({
     queryKey,
-    queryFn: async (): Promise<CollectionId> => {
+    queryFn: async (): Promise<StoredSelection> => {
       const saved = await AsyncStorage.getItem(STORAGE_KEY);
-      return saved === 'bac_100' ? 'bac_100' : 'forest_service_100';
+      if (saved === 'bac_100') return { id: 'bac_100', hasChosen: true };
+      if (saved === 'forest_service_100') return { id: 'forest_service_100', hasChosen: true };
+      return { id: 'forest_service_100', hasChosen: false };
     },
     staleTime: Infinity,
   });
@@ -51,13 +55,14 @@ export function usePrimaryCollection() {
       await AsyncStorage.setItem(STORAGE_KEY, id);
       return id;
     },
-    onSuccess: (id) => queryClient.setQueryData(queryKey, id),
+    onSuccess: (id) => queryClient.setQueryData<StoredSelection>(queryKey, { id, hasChosen: true }),
   });
 
-  const id = selected.data ?? 'forest_service_100';
+  const id = selected.data?.id ?? 'forest_service_100';
   return {
     id,
     collection: getCollection(id),
+    hasChosen: selected.data?.hasChosen ?? false,
     isLoading: selected.isLoading,
     setPrimaryCollection: mutation.mutate,
     isSaving: mutation.isPending,
@@ -84,7 +89,6 @@ const BAC_NAMES = new Set(
 export function isMountainInCollection(mountain: Mountain, collectionId: CollectionId): boolean {
   if (collectionId === 'forest_service_100') return true;
 
-  // BAC uses 장성 축령산; do not accidentally count the Forestry 경기 축령산.
   if (normalize(mountain.name_ko) === '축령산') {
     return /장성|전남|전라/.test(mountain.region ?? '') || /장성/.test(mountain.name_ko);
   }
