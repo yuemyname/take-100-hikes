@@ -6,9 +6,44 @@
 
 ---
 
-## 0. Agent execution rules
+## Table of contents
 
-### 0.1 Non-negotiable rules
+- [0. Agent execution rules](#0-agent-execution-rules)
+- [1. Product summary](#1-product-summary)
+- [2. Visual direction](#2-visual-direction)
+- [3. Navigation](#3-navigation)
+- [4. Core screens](#4-core-screens)
+- [5. Summit certification flow](#5-summit-certification-flow)
+- [6. Shared certification — critical product feature](#6-shared-certification--critical-product-feature)
+- [7. Friends & social relationship model](#7-friends--social-relationship-model)
+- [8. Profile / MY](#8-profile--my)
+- [9. Data model](#9-data-model)
+- [10. Canonical business rules](#10-canonical-business-rules)
+- [11. Recommended technical stack](#11-recommended-technical-stack)
+- [12. Suggested project structure](#12-suggested-project-structure)
+- [13. Shared reusable components](#13-shared-reusable-components)
+- [14. Geographic verification](#14-geographic-verification)
+- [15. Photo rules](#15-photo-rules)
+- [16. Empty / loading / error states](#16-empty--loading--error-states)
+- [17. Accessibility](#17-accessibility)
+- [18. MVP scope](#18-mvp-scope)
+- [19. Implementation order](#19-implementation-order)
+- [20. Screen-level visual acceptance test](#20-screen-level-visual-acceptance-test)
+- [21. Copy style guide](#21-copy-style-guide)
+- [22. Product analytics events](#22-product-analytics-events)
+- [23. Security / privacy requirements](#23-security--privacy-requirements)
+- [24. Supabase RLS intention](#24-supabase-rls-intention)
+- [25. Seed / demo data expectations](#25-seed--demo-data-expectations)
+- [26. Definition of done for generated code](#26-definition-of-done-for-generated-code)
+- [27. AI agent instruction block](#27-ai-agent-instruction-block)
+- [28. Final product identity summary](#28-final-product-identity-summary)
+- [29. Final canonical tagline candidates](#29-final-canonical-tagline-candidates)
+
+---
+
+# 0. Agent execution rules
+
+## 0.1 Non-negotiable rules
 
 1. Do not redesign the product from scratch.
 2. Do not replace the visual direction with a generic green outdoor/fitness app UI.
@@ -25,7 +60,7 @@
    - collectible 100-mountain progression,
    - simple MVP implementation.
 
-### 0.2 Deterministic implementation behavior
+## 0.2 Deterministic implementation behavior
 
 When implementing a screen, follow this order:
 
@@ -37,7 +72,7 @@ When implementing a screen, follow this order:
 
 Do not invent new navigation tabs, primary flows, database entities, or authentication rules unless explicitly required by a blocking technical constraint.
 
-### 0.3 Output quality bar
+## 0.3 Output quality bar
 
 All UI should look intentional enough for a polished consumer app prototype, not a developer dashboard.
 
