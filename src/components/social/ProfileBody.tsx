@@ -3,9 +3,9 @@ import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, Avatar, EmptyState, LoadingSkeleton, Mascot, MountainPhoto, ProgressCounter, formatCertifiedDate } from '@/components/ui';
+import { AppText, Avatar, EmptyState, LoadingSkeleton, Mascot, MountainPhoto, OFFICIAL_ART, ProgressCounter, formatCertifiedDate } from '@/components/ui';
 import { colors, radii, spacing } from '@/constants';
-import { getMascotLook } from '@/data/mascots';
+import { getMascotLook, hasOfficialMascot, PLACEHOLDER_MASCOT } from '@/data/mascots';
 import { countByRegion, useMountains } from '@/features/mountains';
 import { useCompletedMountains, useProfileStats } from '@/features/social';
 import type { Profile } from '@/types';
@@ -135,7 +135,12 @@ export function ProfileBody({ user, action, showCaption = false }: ProfileBodyPr
                     {c.partySize > 1 ? ` · ${c.partySize}명 함께` : ''}
                   </AppText>
                 </View>
-                <Mascot look={getMascotLook(m.mascot_key)} size={44} tilt={4} accessibilityLabel={`${m.name_ko} 캐릭터`} />
+                <Mascot
+                  look={hasOfficialMascot(m.mascot_key) ? getMascotLook(m.mascot_key) : PLACEHOLDER_MASCOT}
+                  silhouette={!hasOfficialMascot(m.mascot_key)}
+                  size={OFFICIAL_ART.boxFor(60)}
+                  accessibilityLabel={hasOfficialMascot(m.mascot_key) ? `${m.name_ko} 캐릭터` : '캐릭터 준비 중'}
+                />
               </Pressable>
             );
           })}
@@ -153,12 +158,17 @@ export function ProfileBody({ user, action, showCaption = false }: ProfileBodyPr
         </View>
       ) : (
         <View style={styles.mascots}>
-          {(completed.data ?? []).map((c, i) => {
+          {(completed.data ?? []).map((c) => {
             const m = mountainById.get(c.mountainId);
             if (!m) return null;
             return (
               <View key={c.mountainId} style={styles.mascotCell}>
-                <Mascot look={getMascotLook(m.mascot_key)} size={64} tilt={i % 2 === 0 ? -5 : 5} accessibilityLabel={`${m.name_ko} 캐릭터`} />
+                <Mascot
+                  look={hasOfficialMascot(m.mascot_key) ? getMascotLook(m.mascot_key) : PLACEHOLDER_MASCOT}
+                  silhouette={!hasOfficialMascot(m.mascot_key)}
+                  size={OFFICIAL_ART.boxFor(80)}
+                  accessibilityLabel={hasOfficialMascot(m.mascot_key) ? `${m.name_ko} 캐릭터` : '캐릭터 준비 중'}
+                />
                 <AppText variant="caption" numberOfLines={1}>
                   {m.name_ko}
                 </AppText>
@@ -218,5 +228,5 @@ const styles = StyleSheet.create({
   historyThumb: { width: 56, height: 56 },
   historyText: { flex: 1, gap: spacing.xxs },
   mascots: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  mascotCell: { width: '22%', alignItems: 'center', gap: spacing.xs },
+  mascotCell: { width: '30%', alignItems: 'center', gap: spacing.xs },
 });

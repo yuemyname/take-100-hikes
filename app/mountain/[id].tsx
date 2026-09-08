@@ -11,20 +11,21 @@ import {
   LoadingSkeleton,
   Mascot,
   MountainPhoto,
+  OFFICIAL_ART,
   PrimaryButton,
   SegmentedControl,
   SpeechBubble,
 } from '@/components/ui';
 import { CertifiedUsersSection } from '@/components/social/CertifiedUsersSection';
 import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
-import { getMascotLook } from '@/data/mascots';
+import { getMascotLook, hasOfficialMascot, PLACEHOLDER_MASCOT } from '@/data/mascots';
 import { getSeedArea, useCompletedMountainIds, useFavorites, useMountain } from '@/features/mountains';
 import { useCertifiedUsers } from '@/features/social';
 
 type DetailTab = 'intro' | 'people';
 
-/** Character width on the detail hero: ~45% of the screen, overlapping the photo edge (UI concept). */
-const HERO_MASCOT_SIZE = 160;
+/** Detail: character visible at ~170pt, overlapping the hero photo edge (UI concept). */
+const HERO_MASCOT_SIZE = OFFICIAL_ART.boxFor(170);
 
 /** 산 상세 — spec §4.3. Certified-user list (mutual friends first) lands in Phase 3. */
 export default function MountainDetailScreen() {
@@ -70,12 +71,13 @@ export default function MountainDetailScreen() {
   const m = mountain.data;
   const completed = completedQuery.data?.has(m.id) ?? false;
   const favorite = favorites.has(m.id);
-  const look = getMascotLook(m.mascot_key);
+  const official = hasOfficialMascot(m.mascot_key);
+  const look = official ? getMascotLook(m.mascot_key) : PLACEHOLDER_MASCOT;
   const area = getSeedArea(m.slug) ?? m.region ?? '';
   const altitude = m.altitude_m === null ? '' : `${m.altitude_m.toLocaleString('ko-KR')}m`;
   const description =
     m.description ?? `${area}에 있는 ${altitude}의 산이에요. 정상 반경 ${m.verification_radius_m}m 안에서 인증할 수 있어요.`;
-  const bubble = completed ? `${m.name_ko} 정복!` : `${m.name_ko}에서 만나요`;
+  const bubble = !official ? '캐릭터 준비 중!' : completed ? `${m.name_ko} 정복!` : `${m.name_ko}에서 만나요`;
 
   return (
     <View style={styles.safe}>
@@ -92,7 +94,12 @@ export default function MountainDetailScreen() {
             <SpeechBubble text={bubble} tone="surface" tailPosition="right" />
           </View>
           <View style={styles.heroMascot} pointerEvents="none">
-            <Mascot look={look} size={HERO_MASCOT_SIZE} silhouette={!completed} tilt={4} flip accessibilityLabel={`${m.name_ko} 캐릭터`} />
+            <Mascot
+              look={look}
+              size={HERO_MASCOT_SIZE}
+              silhouette={!completed || !official}
+              accessibilityLabel={official ? `${m.name_ko} 캐릭터` : '캐릭터 준비 중'}
+            />
           </View>
         </View>
 
@@ -183,9 +190,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroBubble: { position: 'absolute', right: spacing.lg, top: 118 },
-  heroMascot: { position: 'absolute', right: spacing.sm, bottom: -HERO_MASCOT_SIZE * 0.12 },
-  titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md, paddingRight: HERO_MASCOT_SIZE * 0.4 },
+  heroBubble: { position: 'absolute', right: spacing.lg, top: 96 },
+  heroMascot: { position: 'absolute', right: 0, bottom: -HERO_MASCOT_SIZE * OFFICIAL_ART.bottomPaddingRatio - 18 },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md, paddingRight: HERO_MASCOT_SIZE * 0.5 },
   titleText: { flex: 1 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs },
   doneChip: {

@@ -9,6 +9,7 @@ import {
   LoadingSkeleton,
   Mascot,
   MountainCard,
+  OFFICIAL_ART,
   MountainPhoto,
   ProgressCounter,
   Screen,
@@ -24,8 +25,8 @@ import { TOTAL_MOUNTAINS } from '@/types';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
-/** Guide character width on the home hero: about half the photo, sitting on the rocks (UI concept). */
-const HERO_MASCOT_SIZE = 190;
+/** Home: Guide visible at ~200pt, standing on the hero photo (UI concept). */
+const HERO_MASCOT_SIZE = OFFICIAL_ART.boxFor(200);
 
 /** Four one-tap quick actions — spec §4.1, subtitles per the UI concept. */
 const QUICK_ACTIONS: { label: string; sub: string; icon: IconName; href: Href; tone: string }[] = [
@@ -102,7 +103,7 @@ export default function HomeScreen() {
           <SpeechBubble text={bubble} tone="surface" tailPosition="left" />
         </View>
         <View style={styles.mascotBody} pointerEvents="none">
-          <Mascot look={{ ...GUIDE_MASCOT, pose: 'sit' }} size={HERO_MASCOT_SIZE} tilt={-4} accessibilityLabel="백픽스 가이드 캐릭터" />
+          <Mascot look={GUIDE_MASCOT} size={HERO_MASCOT_SIZE} accessibilityLabel="백픽스 가이드 캐릭터" />
         </View>
         <View style={styles.sign} pointerEvents="none">
           <SignPost lines={['산은 왜 하는 건데?', '— 그냥 좋으니까!']} tilt={-2} />
@@ -170,9 +171,9 @@ const styles = StyleSheet.create({
     minHeight: 32,
     justifyContent: 'center',
   },
-  bubble: { position: 'absolute', right: spacing.md, top: spacing.xl },
-  mascotBody: { position: 'absolute', left: spacing.sm, bottom: 56 },
-  sign: { position: 'absolute', right: spacing.md, bottom: -spacing.huge },
+  bubble: { position: 'absolute', right: spacing.md, top: spacing.lg },
+  mascotBody: { position: 'absolute', left: -spacing.sm, bottom: -HERO_MASCOT_SIZE * OFFICIAL_ART.bottomPaddingRatio + 36 },
+  sign: { position: 'absolute', right: spacing.sm, bottom: -spacing.huge },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.md },
   action: {
     width: '47%',

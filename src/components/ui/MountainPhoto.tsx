@@ -41,7 +41,7 @@ export function MountainPhoto({ uri, radius = 0, style, seed = 1, accessibilityL
         <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
       ) : (
         <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={StyleSheet.absoluteFill}>
-          <Circle cx={78} cy={22} r={8} fill={colors.surface} opacity={0.85} />
+          <Circle cx={20} cy={20} r={7} fill={colors.surface} opacity={0.85} />
           <Path d={ridge(seed, 62, 30)} fill={photoTones.ridgeFar} />
           <Path d={ridge(seed + 4, 78, 26)} fill={photoTones.ridgeNear} />
         </Svg>

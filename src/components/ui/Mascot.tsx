@@ -6,18 +6,32 @@ import Svg, { Circle, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
 import { colors, illustration } from '@/constants';
 
 /**
- * 100PEAKS mascot artwork.
+ * 100PEAKS mascot renderer.
  *
- * Direction (docs/references, UI concept): full-body fuzzy monsters with long
- * arms, a small naive face set into the fur, a pale fuzzy belly and pale
- * hands/feet, one strong flat color, a jagged fur outline in black ink and a
- * few hand-drawn fur strokes inside. They are drawn large and sit on top of
- * the mountain photography.
+ * Rendering order (see src/data/mascots.ts):
+ *   official PNG in assets/mascots  →  <Mascot>  →  UI
  *
- * Every shape is authored as a path with a generated fur edge, so the same
- * character scales from a 40pt row thumbnail to a full-width hero. A raster
- * illustration can override any character via `look.image`.
+ * When `look.image` is set the official artwork is the design: it is drawn
+ * with its original aspect ratio (`contentFit="contain"`, square box) and is
+ * never cropped, stretched, masked or re-interpreted. The locked state reuses
+ * the same asset as a flat tinted silhouette with a question mark.
+ *
+ * The procedural SVG below is only a temporary fallback for mountains that
+ * have no official artwork yet.
  */
+
+/**
+ * Official PNGs are 1024 x 1024 with transparent padding; the visible
+ * character spans ~72% of the width and ends ~17% above the bottom edge.
+ * Use these to convert a desired visible size into a box size and to seat
+ * the feet on an edge.
+ */
+export const OFFICIAL_ART = {
+  visibleWidthRatio: 0.72,
+  bottomPaddingRatio: 0.17,
+  /** Box size that shows the character at roughly `visible` points wide. */
+  boxFor: (visible: number) => Math.round(visible / 0.72),
+} as const;
 
 export type MascotEyes = 'dots' | 'shades' | 'goggles' | 'sleepy' | 'wide';
 export type MascotPose = 'cheer' | 'wave' | 'sit';
@@ -54,6 +68,17 @@ export interface MascotProps {
 
 const W = 200;
 const H = 240;
+
+const imageStyles = StyleSheet.create({
+  badge: {
+    position: 'absolute',
+    backgroundColor: colors.inkMuted,
+    borderWidth: 2,
+    borderColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 // ---------------------------------------------------------------------------
 // Fur-edge geometry
@@ -361,10 +386,31 @@ export function Mascot({ look, size = 120, silhouette = false, tilt = 0, flip = 
     return { pose, bodyPaths, bellyPath, facePath, handPaths, feetPaths, strokes };
   }, [look.pose, seed]);
 
-  if (look.image && !silhouette) {
+  if (look.image) {
+    // Official artwork: square box, original aspect ratio, never cropped.
     return (
-      <View accessible accessibilityRole="image" accessibilityLabel={label} style={{ width: size, height, transform }}>
-        <Image source={look.image} style={StyleSheet.absoluteFill} contentFit="contain" />
+      <View accessible accessibilityRole="image" accessibilityLabel={label} style={{ width: size, height: size, transform }}>
+        <Image
+          source={look.image}
+          style={StyleSheet.absoluteFill}
+          contentFit="contain"
+          transition={120}
+          tintColor={silhouette ? colors.border : undefined}
+        />
+        {silhouette ? (
+          <View style={[imageStyles.badge, { width: size * 0.26, height: size * 0.26, borderRadius: size * 0.13, right: size * 0.16, top: size * 0.14 }]}>
+            <Svg width={size * 0.16} height={size * 0.16} viewBox="0 0 24 24">
+              <Path
+                d="M 8 9 Q 8 5 12 5 Q 16 5 16 9 Q 16 12 12.5 13.5 L 12.5 16"
+                stroke={colors.surface}
+                strokeWidth={3}
+                fill="none"
+                strokeLinecap="round"
+              />
+              <Circle cx={12.5} cy={20} r={1.8} fill={colors.surface} />
+            </Svg>
+          </View>
+        ) : null}
       </View>
     );
   }

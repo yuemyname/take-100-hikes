@@ -1,12 +1,12 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { colors, radii, spacing } from '@/constants';
-import { getMascotLook } from '@/data/mascots';
+import { getMascotLook, hasOfficialMascot, PLACEHOLDER_MASCOT } from '@/data/mascots';
 import type { Mountain } from '@/types';
 
 import { AppText } from './AppText';
 import { CheckBadge } from './CheckBadge';
-import { Mascot } from './Mascot';
+import { Mascot, OFFICIAL_ART } from './Mascot';
 import { MountainPhoto } from './MountainPhoto';
 
 export interface MountainCardProps {
@@ -18,12 +18,15 @@ export interface MountainCardProps {
 
 const formatAltitude = (m: number | null) => (m === null ? '' : `${m.toLocaleString('ko-KR')}m`);
 
-/** Mascot width relative to a ~170pt card: waist-up, covering most of the photo (UI concept). */
-const CARD_MASCOT_SIZE = 150;
+/** Grid: character visible at ~100pt, seated on the photo's bottom edge, never cropped. */
+const CARD_MASCOT_SIZE = OFFICIAL_ART.boxFor(100);
 
 /** Image-first collection card — spec §4.2. */
 export function MountainCard({ mountain, index, completed, onPress }: MountainCardProps) {
-  const look = getMascotLook(mountain.mascot_key);
+  const official = hasOfficialMascot(mountain.mascot_key);
+  // Mountains without approved artwork share the common locked placeholder.
+  const look = official ? getMascotLook(mountain.mascot_key) : PLACEHOLDER_MASCOT;
+  const silhouette = !completed || !official;
 
   return (
     <Pressable
@@ -40,8 +43,20 @@ export function MountainCard({ mountain, index, completed, onPress }: MountainCa
           </View>
         ) : null}
         <View style={styles.mascot} pointerEvents="none">
-          <Mascot look={look} size={CARD_MASCOT_SIZE} silhouette={!completed} tilt={completed ? -3 : 0} accessibilityLabel={`${mountain.name_ko} 캐릭터`} />
+          <Mascot
+            look={look}
+            size={CARD_MASCOT_SIZE}
+            silhouette={silhouette}
+            accessibilityLabel={official ? `${mountain.name_ko} 캐릭터` : '캐릭터 준비 중'}
+          />
         </View>
+        {completed && !official ? (
+          <View style={styles.pending}>
+            <AppText variant="caption" weight="700" color="surface">
+              캐릭터 준비 중
+            </AppText>
+          </View>
+        ) : null}
       </View>
       <View style={styles.meta}>
         <AppText variant="heading3" numberOfLines={1}>
@@ -71,6 +86,16 @@ const styles = StyleSheet.create({
   photoWrap: { aspectRatio: 1, position: 'relative', overflow: 'hidden' },
   photo: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   check: { position: 'absolute', top: spacing.sm, right: spacing.sm },
-  mascot: { position: 'absolute', left: '50%', marginLeft: -CARD_MASCOT_SIZE / 2, bottom: -CARD_MASCOT_SIZE * 0.5 },
+  // Only the PNG's transparent bottom padding sits below the photo edge.
+  mascot: { position: 'absolute', left: spacing.xs, bottom: -CARD_MASCOT_SIZE * OFFICIAL_ART.bottomPaddingRatio + 2 },
+  pending: {
+    position: 'absolute',
+    left: spacing.sm,
+    top: spacing.sm,
+    backgroundColor: colors.ink,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+  },
   meta: { padding: spacing.md, gap: spacing.xxs },
 });

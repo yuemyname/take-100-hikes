@@ -13,7 +13,7 @@ export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { LoadingSkeleton, type LoadingSkeletonProps } from './LoadingSkeleton';
 export { TextField, type TextFieldProps } from './TextField';
 export { Wordmark, type WordmarkProps } from './Wordmark';
-export { Mascot, type MascotProps, type MascotLook, type MascotEyes, type MascotPose, type MascotProp } from './Mascot';
+export { Mascot, OFFICIAL_ART, type MascotProps, type MascotLook, type MascotEyes, type MascotPose, type MascotProp } from './Mascot';
 export { MountainPhoto, type MountainPhotoProps } from './MountainPhoto';
 export { StickyNote, type StickyNoteProps } from './StickyNote';
 export { SearchField, type SearchFieldProps } from './SearchField';

@@ -4,7 +4,7 @@ import { spacing } from '@/constants';
 import { GUIDE_MASCOT } from '@/data/mascots';
 
 import { AppText } from './AppText';
-import { Mascot } from './Mascot';
+import { Mascot, OFFICIAL_ART } from './Mascot';
 import { PrimaryButton } from './PrimaryButton';
 
 export interface EmptyStateProps {
@@ -20,7 +20,7 @@ export interface EmptyStateProps {
 export function EmptyState({ title, description, actionLabel, onAction, mascot = true }: EmptyStateProps) {
   return (
     <View style={styles.wrap}>
-      {mascot ? <Mascot look={{ ...GUIDE_MASCOT, eyes: 'sleepy', pose: 'sit' }} size={150} tilt={-3} /> : null}
+      {mascot ? <Mascot look={GUIDE_MASCOT} size={OFFICIAL_ART.boxFor(130)} accessibilityLabel="백픽스 가이드 캐릭터" /> : null}
       <AppText variant="heading3" align="center" style={styles.title}>
         {title}
       </AppText>

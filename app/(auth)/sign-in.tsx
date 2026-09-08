@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
-import { AppText, Mascot, PrimaryButton, Screen, SecondaryButton, SpeechBubble, TextField, Wordmark } from '@/components/ui';
+import { AppText, Mascot, OFFICIAL_ART, PrimaryButton, Screen, SecondaryButton, SpeechBubble, TextField, Wordmark } from '@/components/ui';
 import { GUIDE_MASCOT } from '@/data/mascots';
 import { colors, spacing } from '@/constants';
 import { fieldErrors, signInSchema, useAuth } from '@/features/auth';
@@ -42,8 +42,10 @@ export default function SignInScreen() {
             100개의 산, 100개의 이야기.
           </AppText>
           <View style={styles.mascotRow}>
-            <Mascot look={GUIDE_MASCOT} size={150} tilt={-4} />
-            <SpeechBubble text="이번엔 어디 갈 건데?" tone="surface" style={styles.bubble} />
+            <Mascot look={GUIDE_MASCOT} size={OFFICIAL_ART.boxFor(150)} accessibilityLabel="백픽스 가이드 캐릭터" />
+            <View style={styles.bubble}>
+              <SpeechBubble text="이번엔 어디 갈 건데?" tone="surface" />
+            </View>
           </View>
         </View>
 
@@ -100,8 +102,8 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, justifyContent: 'center', paddingVertical: spacing.xxxl },
   hero: { marginBottom: spacing.xxxl },
-  mascotRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: spacing.xxl, gap: spacing.md },
-  bubble: { marginTop: spacing.xs },
+  mascotRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.lg, gap: spacing.xs },
+  bubble: { flex: 1, alignItems: 'flex-start', marginTop: -spacing.huge },
   formError: { marginBottom: spacing.md },
   gap: { height: spacing.md },
   notice: {

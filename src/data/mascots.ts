@@ -88,13 +88,19 @@ export const GUIDE_MASCOT: MascotLook = {
   accent: colors.green,
 };
 
-/** Shared-certification fallback until a dedicated official party asset exists. */
-export const PARTY_MASCOT: MascotLook = {
-  body: colors.red,
-  patch: colors.surface,
-  face: colors.yellow,
-  eyes: 'shades',
-  pose: 'cheer',
-  prop: 'none',
-  accent: colors.blue,
-};
+/**
+ * Shared-certification moments reuse the official Guide artwork until a
+ * dedicated official party asset exists. Never procedural.
+ */
+export const PARTY_MASCOT: MascotLook = GUIDE_MASCOT;
+
+/** True when the mountain has approved artwork in assets/mascots. */
+export function hasOfficialMascot(mascotKey: string | null | undefined): boolean {
+  return Boolean(mascotKey && CURATED[mascotKey]?.image);
+}
+
+/**
+ * Common placeholder for mountains whose artwork is not ready: the official
+ * Guide silhouette. Used in the collection instead of generating a character.
+ */
+export const PLACEHOLDER_MASCOT: MascotLook = GUIDE_MASCOT;
