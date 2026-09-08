@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useRouter, type Href } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -8,9 +9,7 @@ import {
   Avatar,
   InvitationCard,
   LoadingSkeleton,
-  Mascot,
   MountainCard,
-  OFFICIAL_ART,
   MountainPhoto,
   ProgressCounter,
   Screen,
@@ -19,16 +18,13 @@ import {
   TopBar,
 } from '@/components/ui';
 import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
-import { GUIDE_MASCOT } from '@/data/mascots';
+import { HOME_HERO_CHARACTER, OFFICIAL_STICKERS } from '@/data/officialArt';
 import { useAuth } from '@/features/auth';
 import { useMyInvitations, useRespondToInvitation } from '@/features/certification';
 import { useCompletedMountainIds, useMountains } from '@/features/mountains';
 import { TOTAL_MOUNTAINS } from '@/types';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
-
-/** Home: Guide visible at ~200pt, standing on the hero photo (UI concept). */
-const HERO_MASCOT_SIZE = OFFICIAL_ART.boxFor(200);
 
 /** Four one-tap quick actions — spec §4.1, subtitles per the UI concept. */
 const QUICK_ACTIONS: { label: string; sub: string; icon: IconName; href: Href; tone: string }[] = [
@@ -92,12 +88,15 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      <View style={styles.progress}>
-        {completedQuery.isLoading ? (
-          <LoadingSkeleton height={46} width="45%" />
-        ) : (
-          <ProgressCounter completed={count} />
-        )}
+      <View style={styles.progressWrap}>
+        <AppText variant="caption" weight="700" color="inkMuted">MY 100 PEAKS</AppText>
+        <View style={styles.progress}>
+          {completedQuery.isLoading ? (
+            <LoadingSkeleton height={52} width="45%" />
+          ) : (
+            <ProgressCounter completed={count} />
+          )}
+        </View>
       </View>
 
       <View style={styles.hero}>
@@ -108,6 +107,9 @@ export default function HomeScreen() {
           style={styles.heroPhoto}
           accessibilityLabel={hero ? `${hero.name_ko} 사진` : '산 사진'}
         />
+
+        <View style={styles.heroScrim} pointerEvents="none" />
+
         {hero ? (
           <Pressable
             onPress={() => router.push({ pathname: '/mountain/[id]', params: { id: hero.id } })}
@@ -120,12 +122,25 @@ export default function HomeScreen() {
             </AppText>
           </Pressable>
         ) : null}
+
+        <Image
+          source={OFFICIAL_STICKERS.mountain}
+          contentFit="contain"
+          style={styles.mountainSticker}
+          accessibilityLabel="산 그래픽 스티커"
+        />
+
         <View style={styles.bubble} pointerEvents="none">
           <SpeechBubble text={bubble} tone="surface" tailPosition="left" />
         </View>
-        <View style={styles.mascotBody} pointerEvents="none">
-          <Mascot look={GUIDE_MASCOT} size={HERO_MASCOT_SIZE} accessibilityLabel="백픽스 가이드 캐릭터" />
-        </View>
+
+        <Image
+          source={HOME_HERO_CHARACTER}
+          contentFit="contain"
+          style={styles.heroCharacter}
+          accessibilityLabel="100PEAKS 공식 캐릭터"
+        />
+
         <View style={styles.sign} pointerEvents="none">
           <SignPost lines={['산은 왜 하는 건데?', '— 그냥 좋으니까!']} tilt={-2} />
         </View>
@@ -140,7 +155,7 @@ export default function HomeScreen() {
             accessibilityLabel={`${action.label}, ${action.sub}`}
             style={({ pressed }) => [styles.action, pressed ? styles.actionPressed : null]}
           >
-            <MaterialCommunityIcons name={action.icon} size={40} color={action.tone} style={styles.actionIcon} />
+            <MaterialCommunityIcons name={action.icon} size={38} color={action.tone} style={styles.actionIcon} />
             <AppText variant="heading3">{action.label}</AppText>
             <AppText variant="caption" color="inkMuted">
               {action.sub}
@@ -179,9 +194,16 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   invitations: { marginTop: spacing.sm, marginBottom: spacing.lg, gap: spacing.md },
-  progress: { marginTop: spacing.sm },
-  hero: { marginTop: spacing.xl, marginBottom: spacing.huge + spacing.lg },
-  heroPhoto: { height: 380 },
+  progressWrap: { marginTop: spacing.md, gap: spacing.xxs },
+  progress: { marginTop: 2 },
+  hero: { marginTop: spacing.lg, marginBottom: spacing.huge + spacing.xl, minHeight: 410 },
+  heroPhoto: { height: 390 },
+  heroScrim: {
+    ...StyleSheet.absoluteFillObject,
+    bottom: 20,
+    borderRadius: radii.cardLarge,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
   heroTag: {
     position: 'absolute',
     top: spacing.md,
@@ -193,14 +215,28 @@ const styles = StyleSheet.create({
     minHeight: 32,
     justifyContent: 'center',
   },
-  bubble: { position: 'absolute', right: spacing.md, top: spacing.lg },
-  mascotBody: { position: 'absolute', left: -spacing.sm, bottom: -HERO_MASCOT_SIZE * OFFICIAL_ART.bottomPaddingRatio + 36 },
+  mountainSticker: {
+    position: 'absolute',
+    width: 78,
+    height: 78,
+    left: spacing.md,
+    top: spacing.md,
+    transform: [{ rotate: '-7deg' }],
+  },
+  bubble: { position: 'absolute', right: spacing.md, top: 72, maxWidth: 190 },
+  heroCharacter: {
+    position: 'absolute',
+    width: 250,
+    height: 300,
+    left: -20,
+    bottom: -54,
+  },
   sign: { position: 'absolute', right: spacing.sm, bottom: -spacing.huge },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.md },
   action: {
     width: '47%',
     flexGrow: 1,
-    minHeight: MIN_TOUCH_TARGET + 72,
+    minHeight: MIN_TOUCH_TARGET + 64,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surface,
@@ -209,8 +245,9 @@ const styles = StyleSheet.create({
     borderRadius: radii.cardLarge,
     padding: spacing.lg,
     gap: spacing.xxs,
+    transform: [{ rotate: '-0.4deg' }],
   },
-  actionPressed: { backgroundColor: colors.surfaceMuted },
+  actionPressed: { backgroundColor: colors.surfaceMuted, transform: [{ rotate: '0deg' }, { scale: 0.99 }] },
   actionIcon: { marginBottom: spacing.xs },
   section: { marginTop: spacing.xxxl },
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
