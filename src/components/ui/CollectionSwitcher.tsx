@@ -11,13 +11,19 @@ export interface CollectionSwitcherProps {
 }
 
 export function CollectionSwitcher({ compact = false, showDescription = false }: CollectionSwitcherProps) {
-  const { id, collection, setPrimaryCollection, isSaving } = usePrimaryCollection();
+  const { id, collection, hasChosen, setPrimaryCollection, isSaving } = usePrimaryCollection();
 
   return (
     <View style={styles.wrap}>
+      {!hasChosen && !compact ? (
+        <View style={styles.firstChoice}>
+          <AppText variant="heading3">어떤 100개의 산에 도전할까요?</AppText>
+          <AppText variant="caption" color="inkMuted">처음 하나를 골라도 나중에 언제든 바꿀 수 있어요.</AppText>
+        </View>
+      ) : null}
       <View style={[styles.row, compact ? styles.rowCompact : null]} accessibilityRole="tablist">
         {COLLECTIONS.map((item) => {
-          const selected = item.id === id;
+          const selected = item.id === id && hasChosen;
           return (
             <Pressable
               key={item.id}
@@ -35,7 +41,7 @@ export function CollectionSwitcher({ compact = false, showDescription = false }:
           );
         })}
       </View>
-      {showDescription ? (
+      {showDescription && hasChosen ? (
         <AppText variant="caption" color="inkMuted" style={styles.description}>
           {collection.description} · 언제든 바꿀 수 있어요.
         </AppText>
@@ -46,6 +52,7 @@ export function CollectionSwitcher({ compact = false, showDescription = false }:
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.xs },
+  firstChoice: { gap: spacing.xxs, marginBottom: spacing.xs },
   row: {
     flexDirection: 'row',
     alignSelf: 'stretch',
