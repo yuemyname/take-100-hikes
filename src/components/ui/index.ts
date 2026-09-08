@@ -29,3 +29,4 @@ export { CertificationStatusBanner, type CertificationStatusBannerProps, type Ce
 export { FriendSelectRow, type FriendSelectRowProps } from './FriendSelectRow';
 export { ParticipantRow, type ParticipantRowProps } from './ParticipantRow';
 export { InvitationCard, type InvitationCardProps } from './InvitationCard';
+export { CollectionSwitcher, type CollectionSwitcherProps } from './CollectionSwitcher';

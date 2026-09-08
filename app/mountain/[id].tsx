@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -9,25 +10,20 @@ import {
   EmptyState,
   FavoriteButton,
   LoadingSkeleton,
-  Mascot,
   MountainPhoto,
-  OFFICIAL_ART,
   PrimaryButton,
   SegmentedControl,
   SpeechBubble,
 } from '@/components/ui';
 import { CertifiedUsersSection } from '@/components/social/CertifiedUsersSection';
 import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
-import { getMascotLook, hasOfficialMascot, PLACEHOLDER_MASCOT } from '@/data/mascots';
+import { MOUNTAIN_DETAIL_CHARACTER, OFFICIAL_STICKERS } from '@/data/officialArt';
 import { getSeedArea, useCompletedMountainIds, useFavorites, useMountain } from '@/features/mountains';
 import { useCertifiedUsers } from '@/features/social';
 
 type DetailTab = 'intro' | 'people';
 
-/** Detail: character visible at ~170pt, overlapping the hero photo edge (UI concept). */
-const HERO_MASCOT_SIZE = OFFICIAL_ART.boxFor(170);
-
-/** 산 상세 — spec §4.3. Certified-user list (mutual friends first) lands in Phase 3. */
+/** 산 상세 — mountain photography first; official cast is recurring decoration, never mountain identity. */
 export default function MountainDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -71,13 +67,11 @@ export default function MountainDetailScreen() {
   const m = mountain.data;
   const completed = completedQuery.data?.has(m.id) ?? false;
   const favorite = favorites.has(m.id);
-  const official = hasOfficialMascot(m.mascot_key);
-  const look = official ? getMascotLook(m.mascot_key) : PLACEHOLDER_MASCOT;
   const area = getSeedArea(m.slug) ?? m.region ?? '';
   const altitude = m.altitude_m === null ? '' : `${m.altitude_m.toLocaleString('ko-KR')}m`;
   const description =
     m.description ?? `${area}에 있는 ${altitude}의 산이에요. 정상 반경 ${m.verification_radius_m}m 안에서 인증할 수 있어요.`;
-  const bubble = !official ? '캐릭터 준비 중!' : completed ? `${m.name_ko} 정복!` : `${m.name_ko}에서 만나요`;
+  const bubble = completed ? `${m.name_ko} 접수 완료!` : '여긴 좀 가보고 싶은데?';
 
   return (
     <View style={styles.safe}>
@@ -90,17 +84,24 @@ export default function MountainDetailScreen() {
             </Pressable>
             <FavoriteButton active={favorite} onPress={() => toggle(m.id)} disabled={isToggling} />
           </SafeAreaView>
+
+          <Image
+            source={completed ? OFFICIAL_STICKERS.summitCheck : OFFICIAL_STICKERS.thisIsWhyIHike}
+            contentFit="contain"
+            style={styles.heroSticker}
+            accessibilityLabel={completed ? '정상 접수 완료 그래픽' : '이 맛에 등산함 그래픽'}
+          />
+
           <View style={styles.heroBubble} pointerEvents="none">
             <SpeechBubble text={bubble} tone="surface" tailPosition="right" />
           </View>
-          <View style={styles.heroMascot} pointerEvents="none">
-            <Mascot
-              look={look}
-              size={HERO_MASCOT_SIZE}
-              silhouette={!completed || !official}
-              accessibilityLabel={official ? `${m.name_ko} 캐릭터` : '캐릭터 준비 중'}
-            />
-          </View>
+
+          <Image
+            source={MOUNTAIN_DETAIL_CHARACTER}
+            contentFit="contain"
+            style={styles.heroCharacter}
+            accessibilityLabel="100PEAKS 공식 캐릭터"
+          />
         </View>
 
         <View style={styles.padded}>
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   padded: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
   gap: { height: spacing.lg },
-  hero: { height: 360, position: 'relative' },
+  hero: { height: 380, position: 'relative' },
   heroBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -190,9 +191,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroBubble: { position: 'absolute', right: spacing.lg, top: 96 },
-  heroMascot: { position: 'absolute', right: 0, bottom: -HERO_MASCOT_SIZE * OFFICIAL_ART.bottomPaddingRatio - 18 },
-  titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md, paddingRight: HERO_MASCOT_SIZE * 0.5 },
+  heroSticker: {
+    position: 'absolute',
+    left: spacing.md,
+    top: 88,
+    width: 112,
+    height: 74,
+    transform: [{ rotate: '-7deg' }],
+  },
+  heroBubble: { position: 'absolute', right: spacing.lg, top: 92, maxWidth: 188 },
+  heroCharacter: {
+    position: 'absolute',
+    right: -22,
+    bottom: -54,
+    width: 220,
+    height: 270,
+  },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md, paddingRight: 72 },
   titleText: { flex: 1 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs },
   doneChip: {

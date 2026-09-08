@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { AppText, EmptyState, PrimaryButton, Screen, SecondaryButton, TopBar } from '@/components/ui';
 import { colors, radii, spacing } from '@/constants';
+import { OFFICIAL_STICKERS } from '@/data/officialArt';
 import type { CaptureDraft } from '@/features/certification';
 import { useMountain } from '@/features/mountains';
 import { formatDistance } from '@/lib/geo';
@@ -19,27 +20,25 @@ type Params = {
   distance: string;
 };
 
-/** Review the summit capture, then create the session with the creator confirmed (spec §5, §6.4). */
+/** Review the summit capture, then move to mutual-friend selection. */
 export default function ReviewScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<Params>();
   const mountain = useMountain(params.mountainId);
 
-  const draft: CaptureDraft | null =
-    mountain.data && params.photoUri
-      ? {
-          mountainId: mountain.data.id,
-          photoUri: params.photoUri,
-          latitude: Number(params.latitude),
-          longitude: Number(params.longitude),
-          gpsAccuracyM: params.accuracy ? Number(params.accuracy) : null,
-          capturedAt: params.capturedAt,
-          verificationRadiusM: mountain.data.verification_radius_m,
-          distanceMeters: Number(params.distance),
-        }
-      : null;
+  const draft: CaptureDraft | null = mountain.data && params.photoUri
+    ? {
+        mountainId: mountain.data.id,
+        photoUri: params.photoUri,
+        latitude: Number(params.latitude),
+        longitude: Number(params.longitude),
+        gpsAccuracyM: params.accuracy ? Number(params.accuracy) : null,
+        capturedAt: params.capturedAt,
+        verificationRadiusM: mountain.data.verification_radius_m,
+        distanceMeters: Number(params.distance),
+      }
+    : null;
 
-  // Next: pick mutual friends (spec §6.3 step 3). Creating the session happens there.
   const handleNext = () => {
     if (!draft) return;
     router.push({ pathname: '/certification/invite', params });
@@ -49,12 +48,7 @@ export default function ReviewScreen() {
     return (
       <Screen>
         <TopBar title="인증 확인" onBack={() => router.back()} />
-        <EmptyState
-          title="촬영 정보가 없어요"
-          description="정상에서 다시 찍어주세요."
-          actionLabel="다시 찍기"
-          onAction={() => router.back()}
-        />
+        <EmptyState title="촬영 정보가 없어요" description="정상에서 다시 찍어주세요." actionLabel="다시 찍기" onAction={() => router.back()} />
       </Screen>
     );
   }
@@ -68,26 +62,30 @@ export default function ReviewScreen() {
       <View style={styles.photoWrap}>
         <Image source={{ uri: draft.photoUri }} style={styles.photo} contentFit="cover" accessibilityLabel="촬영한 인증 사진" />
         <View style={styles.photoTag}>
-          <MaterialCommunityIcons name="camera" size={14} color={colors.surface} />
-          <AppText variant="caption" weight="700" color="surface">
-            앱 카메라 촬영
-          </AppText>
+          <MaterialCommunityIcons name="crosshairs-gps" size={14} color={colors.surface} />
+          <AppText variant="caption" weight="700" color="surface">정상 위치 확인 완료</AppText>
         </View>
+        <Image source={OFFICIAL_STICKERS.summitCheck} contentFit="contain" style={styles.sticker} accessibilityLabel="정상 접수 스티커" />
       </View>
 
-      <AppText variant="heading1" style={styles.title}>
-        {mountain.data?.name_ko} 정상 맞죠?
-      </AppText>
+      <View style={styles.titleRow}>
+        <View style={styles.titleCopy}>
+          <AppText variant="displayL">이 사진으로{`\n`}남길까요?</AppText>
+          <AppText variant="bodySmall" color="inkMuted" style={styles.mountainName}>{mountain.data?.name_ko} · 정상 인증</AppText>
+        </View>
+        <Image source={OFFICIAL_STICKERS.freshAir} contentFit="contain" style={styles.airSticker} accessibilityLabel="공기맛집 스티커" />
+      </View>
+
       <View style={styles.facts}>
         <Fact icon="crosshairs-gps" label="정상까지" value={formatDistance(draft.distanceMeters)} />
         <Fact icon="clock-outline" label="촬영 시각" value={timeLabel} />
         <Fact icon="map-marker-radius" label="인증 반경" value={`${draft.verificationRadiusM}m`} />
       </View>
       <AppText variant="bodySmall" color="inkMuted" style={styles.note}>
-        정확한 위치 좌표는 공개되지 않아요. 친구에게는 산 이름과 날짜만 보여요.
+        정확한 좌표는 공개하지 않아요. 친구에게는 산 이름, 사진, 인증 날짜만 보여요.
       </AppText>
 
-      <PrimaryButton label="다음: 친구 선택" onPress={handleNext} />
+      <PrimaryButton label="좋아, 친구 선택하기" onPress={handleNext} />
       <View style={styles.gap} />
       <SecondaryButton label="다시 찍기" onPress={() => router.back()} />
     </Screen>
@@ -98,42 +96,23 @@ function Fact({ icon, label, value }: { icon: keyof typeof MaterialCommunityIcon
   return (
     <View style={styles.fact}>
       <MaterialCommunityIcons name={icon} size={18} color={colors.inkMuted} />
-      <AppText variant="caption" color="inkMuted">
-        {label}
-      </AppText>
-      <AppText variant="body" weight="700">
-        {value}
-      </AppText>
+      <AppText variant="caption" color="inkMuted">{label}</AppText>
+      <AppText variant="body" weight="700">{value}</AppText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  photoWrap: { borderRadius: radii.cardLarge, overflow: 'hidden', backgroundColor: colors.ink, marginTop: spacing.sm },
+  photoWrap: { borderRadius: radii.cardLarge, overflow: 'hidden', backgroundColor: colors.ink, marginTop: spacing.sm, borderWidth: 2, borderColor: colors.ink },
   photo: { width: '100%', aspectRatio: 3 / 4 },
-  photoTag: {
-    position: 'absolute',
-    left: spacing.md,
-    top: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: 'rgba(17,17,17,0.7)',
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  title: { marginTop: spacing.xl },
-  facts: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.lg },
-  fact: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radii.card,
-    padding: spacing.md,
-    gap: spacing.xxs,
-  },
+  photoTag: { position: 'absolute', left: spacing.md, top: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: 'rgba(17,17,17,0.78)', borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  sticker: { position: 'absolute', width: 112, height: 66, right: spacing.md, bottom: spacing.md, transform: [{ rotate: '7deg' }] },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.xl },
+  titleCopy: { flex: 1 },
+  mountainName: { marginTop: spacing.xs },
+  airSticker: { width: 86, height: 60, transform: [{ rotate: '-7deg' }] },
+  facts: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
+  fact: { flex: 1, backgroundColor: colors.surface, borderTopWidth: 2, borderTopColor: colors.ink, paddingVertical: spacing.md, gap: spacing.xxs },
   note: { marginTop: spacing.md, marginBottom: spacing.xl },
   gap: { height: spacing.md },
 });
