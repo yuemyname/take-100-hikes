@@ -25,3 +25,4 @@ export { FollowButton, type FollowButtonProps } from './FollowButton';
 export { UserRow, type UserRowProps } from './UserRow';
 export { CertifiedUserRow, formatCertifiedDate, type CertifiedUserRowProps } from './CertifiedUserRow';
 export { SignPost, type SignPostProps } from './SignPost';
+export { CertificationStatusBanner, type CertificationStatusBannerProps, type CertificationStatus } from './CertificationStatusBanner';

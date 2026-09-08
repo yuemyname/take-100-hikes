@@ -153,7 +153,7 @@ export default function MountainDetailScreen() {
       <View style={[styles.cta, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
         <PrimaryButton
           label="이 산 인증하기"
-          onPress={() => router.push({ pathname: '/verify', params: { mountainId: m.id } })}
+          onPress={() => router.push({ pathname: '/certification/capture', params: { mountainId: m.id } })}
         />
       </View>
     </View>

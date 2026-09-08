@@ -37,6 +37,9 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="mountain/[id]" />
         <Stack.Screen name="user/[id]" />
+        <Stack.Screen name="certification/capture" />
+        <Stack.Screen name="certification/review" />
+        <Stack.Screen name="certification/success" />
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="(auth)" />

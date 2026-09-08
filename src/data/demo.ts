@@ -118,13 +118,20 @@ export const DEMO_SESSIONS: DemoSession[] = [
   { id: 'demo:s-hiking22-1', mountainSlug: 'hallasan', creatorId: id('hiking22'), capturedAt: '2026-04-04T00:00:00.000Z', photoUrl: null, members: [{ userId: id('hiking22'), status: 'confirmed' }] },
 ];
 
-/** Slugs the demo user has confirmed — derived, never hand-listed. */
-export const DEMO_COMPLETED_SLUGS: readonly string[] = Array.from(
-  new Set(
-    DEMO_SESSIONS.filter((s) => s.members.some((m) => m.userId === DEMO_ME_ID && m.status === 'confirmed')).map(
-      (s) => s.mountainSlug,
+/** Slugs the demo user has confirmed — derived from sessions, never hand-listed. */
+export function getDemoCompletedSlugs(): string[] {
+  return Array.from(
+    new Set(
+      DEMO_SESSIONS.filter((s) => s.members.some((m) => m.userId === DEMO_ME_ID && m.status === 'confirmed')).map(
+        (s) => s.mountainSlug,
+      ),
     ),
-  ),
-);
+  );
+}
+
+/** Guest-mode certifications live in memory for the session (spec §25 demo build). */
+export function addDemoSession(session: DemoSession): void {
+  DEMO_SESSIONS.unshift(session);
+}
 
 export const DEMO_FAVORITE_SLUGS = ['deogyusan', 'sobaeksan'] as const;

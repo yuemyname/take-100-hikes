@@ -10,6 +10,7 @@
 
 - **Phase 1 — Foundation 완료.** Expo + TypeScript 프로젝트, 디자인 토큰, 5탭 내비게이션, Supabase 클라이언트, 인증 셸(로그인 / 가입), 기본 UI 컴포넌트, 초기 DB 마이그레이션.
 - **Phase 2 — Mountains 완료.** 100대 명산 시드 데이터(`src/data/mountains.json` → `supabase/seed.sql`), 명산 도감 그리드(필터·검색·수집 상태), 산 상세(히어로·마스코트·즐겨찾기·소개/인증자 탭·인증 CTA), 홈·MY의 진행도 연동, 산별 SVG 마스코트 시스템.
+- **Phase 4 — Certification 완료.** 위치 권한·정상 반경 검증(Haversine), 앱 내 카메라 촬영, 사진 업로드(Storage `certifications` 버킷), 인증 세션 생성 + 생성자 확정, 캐릭터 공개 완료 화면, DB 트리거로 반경 서버 재검증. 게스트 모드에서는 세션이 메모리에만 저장됩니다.
 - **Phase 3 — Social 완료.** 프로필(팔로워·팔로잉·산 수, 산 기록, 모은 캐릭터), 팔로우/언팔로우, 맞팔 계산, 친구 탭(맞팔·팔로잉·팔로워·검색), 산 상세 인증자 목록(맞팔 친구가 항상 위, 각 그룹 최신순, 공동 인증 "N명 함께" 표시).
 - 인증 플로우(GPS·카메라)와 공동 인증 초대는 아직 셸입니다. 다음 단계는 마스터 스펙 19장의 **Phase 4 — Certification**입니다.
 - 이전에 있던 레거시 프로젝트(MountainBot)는 모두 제거되었습니다.
@@ -29,7 +30,7 @@ npm run typecheck      # tsc --noEmit
 npm run lint           # expo lint
 ```
 
-Supabase 스키마는 `supabase/migrations/0001_init.sql`을 프로젝트 SQL 편집기에서 실행하거나 `supabase db push`로 적용하고, 이어서 `supabase/seed.sql`로 100대 명산을 넣습니다. 시드 SQL은 `node scripts/generate-seed.js`로 `src/data/mountains.json`에서 다시 만들 수 있습니다.
+Supabase 스키마는 `supabase/migrations/`의 SQL을 순서대로(0001 → 0002 → 0003) SQL 편집기에서 실행하거나 `supabase db push`로 적용하고, 이어서 `supabase/seed.sql`로 100대 명산을 넣습니다. 시드 SQL은 `node scripts/generate-seed.js`로 `src/data/mountains.json`에서 다시 만들 수 있습니다.
 
 산 사진은 `mountains.image_url`에 URL을 넣으면 바로 표시됩니다(권장: Supabase Storage 공개 버킷 `mountains/{slug}.jpg`). URL이 없으면 어두운 산 실루엣 플레이스홀더가 나옵니다.
 `.env`가 없으면 로그인 화면에 안내가 뜨고, 개발 빌드에서는 "설정 없이 둘러보기"로 탭 화면을 볼 수 있습니다.
@@ -40,8 +41,10 @@ Supabase 스키마는 `supabase/migrations/0001_init.sql`을 프로젝트 SQL �
 app/                 Expo Router 라우트
   _layout.tsx        Provider + 인증 게이트 (Stack.Protected)
   (auth)/            sign-in, sign-up
-  (tabs)/            index(홈), mountains, verify, friends, profile
-  mountain/[id].tsx  산 상세 (소개 / 인증자)
+  (tabs)/            index(홈), mountains, verify(가까운 산 선택), friends, profile
+  mountain/[id].tsx  산 상세
+  user/[id].tsx      친구 프로필
+  certification/     capture(GPS + 카메라), review(확인·업로드), success(캐릭터 공개) (소개 / 인증자)
   user/[id].tsx      친구 프로필
 src/
   constants/         colors, typography, spacing, radii (스펙 §2 토큰)
@@ -49,11 +52,13 @@ src/
   data/              mountains.json(100대 명산), mascots.ts(산별 캐릭터 룩), demo.ts(게스트 모드 데모 상태)
   features/auth/     AuthProvider, zod 스키마, 에러 문구
   features/mountains/ Supabase/로컬 데이터 접근, React Query 훅, 필터 로직
+  features/social/   프로필·팔로우·인증자 목록(맞팔 우선)
+  features/certification/ 정상 근접 훅, 세션 생성(사진 업로드 포함)
   features/social/   프로필·팔로우·맞팔·인증자 목록 (맞팔 우선 정렬은 api.ts의 partition)
   components/social/ ProfileBody(MY·친구 공용), CertifiedUsersSection
   lib/               supabase 클라이언트, geo(Haversine), env, fonts, queryClient
   types/             DB row 타입 (스펙 §9)
-supabase/migrations/ 0001_init.sql (테이블, RLS, 프로필 트리거), 0002_social.sql (맞팔·완료 수 함수)
+supabase/migrations/ 0001_init(테이블·RLS), 0002_social(맞팔 함수), 0003_certification(사진 버킷·반경 트리거), 0002_social.sql (맞팔·완료 수 함수)
 supabase/seed.sql    100대 명산 시드 (scripts/generate-seed.js로 생성)
 docs/references/     비주얼 레퍼런스 3장 + 매니페스트
 ```
@@ -104,6 +109,11 @@ React Native · Expo · TypeScript · Expo Router · Supabase (PostgreSQL / Auth
 | 4. Certification | 위치 권한, 거리 검증, 카메라, 사진 업로드, 인증 세션 생성, 생성자 확정 |
 | 5. Shared certification | 맞팔 친구 선택, 초대, 대기 상태, 수락 / 거절, 참여자 GPS 검증, 완료 화면 |
 | 6. Polish | 마스코트 등장 애니메이션, 스켈레톤, 빈 상태, 햅틱, 마이크로 인터랙션, 접근성 |
+
+## 인증 플로우 테스트 (개발 빌드)
+
+- `.env` 없이 실행하면 게스트 모드입니다. 촬영 화면 하단의 "데모: 정상 위치로 이동"으로 GPS를 정상 좌표로 바꿔 반경 검증을 통과시킬 수 있고, 카메라가 없으면 데모 사진으로 진행됩니다. 두 버튼 모두 `__DEV__` + 게스트 모드에서만 나타납니다.
+- iOS 시뮬레이터는 Features → Location → Custom Location에 산 좌표(`src/data/mountains.json`)를 넣으면 실제 훅으로 검증할 수 있습니다.
 
 ## 알려진 공백
 

@@ -1,5 +1,5 @@
 import mountainsJson from '@/data/mountains.json';
-import { DEMO_COMPLETED_SLUGS, DEMO_FAVORITE_SLUGS } from '@/data/demo';
+import { DEMO_FAVORITE_SLUGS, getDemoCompletedSlugs } from '@/data/demo';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import type { Mountain } from '@/types';
 
@@ -51,7 +51,8 @@ export async function fetchMountain(id: string): Promise<Mountain | null> {
  */
 export async function fetchCompletedMountainIds(userId: string | null): Promise<Set<string>> {
   if (!isSupabaseConfigured || !userId) {
-    return new Set(LOCAL_MOUNTAINS.filter((m) => DEMO_COMPLETED_SLUGS.includes(m.slug)).map((m) => m.id));
+    const slugs = getDemoCompletedSlugs();
+    return new Set(LOCAL_MOUNTAINS.filter((m) => slugs.includes(m.slug)).map((m) => m.id));
   }
   const { data, error } = await getSupabase()
     .from('certification_members')
