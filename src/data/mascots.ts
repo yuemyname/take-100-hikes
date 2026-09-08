@@ -2,27 +2,42 @@ import type { MascotEyes, MascotLook, MascotPose, MascotProp } from '@/component
 import { colors, illustration } from '@/constants';
 
 /**
- * Per-mountain mascot looks — 100PEAKS_MASTER_SPEC.md §2.6 and the UI concept
- * in docs/references. Curated entries first; every other mountain gets a
- * deterministic look derived from its mascot key so the full collection
- * renders today and artwork can be upgraded one mountain at a time.
- *
- * To replace a character with a raster illustration, add
- * `image: require('../../assets/mascots/<key>.png')` to its entry.
+ * Official raster mascot artwork lives in /assets.
+ * The seven approved characters below MUST render their image asset first.
+ * Procedural SVG styling remains only as a fallback for mountains that do not
+ * yet have official artwork.
  */
 const CURATED: Record<string, MascotLook> = {
-  // white yeti with a blue face — 설악산
-  seoraksan: { body: colors.surface, patch: illustration.faceCream, face: colors.blue, eyes: 'wide', pose: 'wave', prop: 'snow', accent: colors.blue },
-  // green monster with a hot volcanic face — 한라산
-  hallasan: { body: colors.green, patch: illustration.faceCream, face: colors.red, eyes: 'shades', pose: 'cheer', prop: 'flag', accent: colors.orange },
-  // gray rock-like sleepy monster — 북한산
-  bukhansan: { body: colors.inkMuted, patch: colors.surfaceMuted, face: illustration.faceCream, eyes: 'sleepy', pose: 'sit', prop: 'rock', accent: colors.yellow },
-  // earthy forest monster with a tree — 지리산
-  jirisan: { body: colors.orange, patch: illustration.faceCream, face: colors.green, eyes: 'dots', pose: 'wave', prop: 'tree', accent: colors.green },
-  // winter ridge, blue with a snowy face — 덕유산
-  deogyusan: { body: colors.blue, patch: colors.surface, face: illustration.faceCream, eyes: 'goggles', pose: 'cheer', prop: 'snow', accent: colors.pink },
-  // azalea pink — 소백산
-  sobaeksan: { body: colors.pink, patch: illustration.faceCream, face: colors.yellow, eyes: 'dots', pose: 'sit', prop: 'flower', accent: colors.red },
+  seoraksan: {
+    image: require('../../assets/seoraksan.png'),
+    body: colors.red, patch: colors.surface, face: illustration.faceCream,
+    eyes: 'wide', pose: 'wave', prop: 'none', accent: colors.blue,
+  },
+  hallasan: {
+    image: require('../../assets/hallasan.png'),
+    body: colors.blue, patch: colors.surface, face: illustration.faceCream,
+    eyes: 'dots', pose: 'wave', prop: 'none', accent: colors.yellow,
+  },
+  bukhansan: {
+    image: require('../../assets/bukhansan.png'),
+    body: colors.green, patch: colors.surface, face: illustration.faceCream,
+    eyes: 'wide', pose: 'sit', prop: 'none', accent: colors.yellow,
+  },
+  jirisan: {
+    image: require('../../assets/jirisan.png'),
+    body: colors.pink, patch: colors.surface, face: illustration.faceCream,
+    eyes: 'sleepy', pose: 'sit', prop: 'none', accent: colors.green,
+  },
+  deogyusan: {
+    image: require('../../assets/deogyusan.png'),
+    body: colors.surface, patch: colors.surfaceMuted, face: illustration.faceCream,
+    eyes: 'goggles', pose: 'wave', prop: 'none', accent: colors.blue,
+  },
+  sobaeksan: {
+    image: require('../../assets/sobaeksan.png'),
+    body: colors.pink, patch: colors.surface, face: illustration.faceCream,
+    eyes: 'dots', pose: 'cheer', prop: 'none', accent: colors.red,
+  },
 };
 
 const BODY_CYCLE: string[] = [colors.blue, colors.red, colors.yellow, colors.pink, colors.green, colors.orange];
@@ -61,18 +76,19 @@ export function getMascotLook(mascotKey: string | null | undefined): MascotLook 
   };
 }
 
-/** The yellow guide with blue goggles that appears on Home and the auth screens. */
+/** Official yellow Guide artwork. */
 export const GUIDE_MASCOT: MascotLook = {
+  image: require('../../assets/guide.png'),
   body: colors.yellow,
   patch: colors.surface,
   face: illustration.faceCream,
-  eyes: 'goggles',
-  pose: 'cheer',
+  eyes: 'dots',
+  pose: 'wave',
   prop: 'none',
-  accent: colors.blue,
+  accent: colors.green,
 };
 
-/** Red monster used for shared-certification moments (spec §6, concept board). */
+/** Shared-certification fallback until a dedicated official party asset exists. */
 export const PARTY_MASCOT: MascotLook = {
   body: colors.red,
   patch: colors.surface,
