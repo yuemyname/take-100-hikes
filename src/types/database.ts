@@ -4,6 +4,8 @@
  */
 export type CertificationSessionStatus = 'active' | 'completed' | 'cancelled';
 export type CertificationMemberStatus = 'invited' | 'confirmed' | 'declined' | 'expired';
+export type CollectionId = 'forest_service_100' | 'bac_100';
+export type CoordinateStatus = 'pending' | 'verified' | 'retired';
 
 export interface Profile {
   id: string;
@@ -11,6 +13,7 @@ export interface Profile {
   display_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  primary_collection_id?: CollectionId | null;
   created_at: string;
 }
 
@@ -28,6 +31,39 @@ export interface Mountain {
   mascot_key: string | null;
   description: string | null;
   display_order: number | null;
+  created_at: string;
+}
+
+export interface Collection {
+  id: CollectionId;
+  name_ko: string;
+  short_name_ko: string;
+  description: string | null;
+  source_url: string | null;
+  target_count: number;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface VerificationPoint {
+  id: string;
+  mountain_id: string;
+  name_ko: string;
+  latitude: number | null;
+  longitude: number | null;
+  verification_radius_m: number;
+  coordinate_status: CoordinateStatus;
+  source_note: string | null;
+  created_at: string;
+}
+
+export interface CollectionMountain {
+  collection_id: CollectionId;
+  mountain_id: string;
+  verification_point_id: string | null;
+  display_order: number;
+  source_label: string | null;
   created_at: string;
 }
 
@@ -72,5 +108,5 @@ export interface Favorite {
 /** Follow relation from the current user's point of view — spec §7.1. */
 export type RelationshipState = 'none' | 'following' | 'follower' | 'mutual';
 
-/** Total number of mountains in the collection — spec §1.3. */
+/** Every supported collection currently targets 100 entries. */
 export const TOTAL_MOUNTAINS = 100;
