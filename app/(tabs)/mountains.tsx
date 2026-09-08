@@ -4,8 +4,9 @@ import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppText, EmptyState, LoadingSkeleton, MountainCard, Pill, SearchField, TopBar } from '@/components/ui';
-import { colors, spacing } from '@/constants';
+import { AppText, CollectionSwitcher, EmptyState, LoadingSkeleton, MountainCard, Pill, SearchField, TopBar } from '@/components/ui';
+import { spacing, colors } from '@/constants';
+import { BAC_PENDING_COUNT, completedCountForCollection, mountainsForCollection, usePrimaryCollection } from '@/features/collections';
 import {
   MOUNTAIN_FILTERS,
   REGION_ORDER,
@@ -16,31 +17,49 @@ import {
 } from '@/features/mountains';
 import type { Mountain } from '@/types';
 
-/** 명산 도감 — spec §4.2. Two-column, image-first, completion scannable at a glance. */
 export default function MountainsScreen() {
   const router = useRouter();
   const [filter, setFilter] = useState<MountainFilter>('all');
   const [region, setRegion] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const { id: collectionId, collection } = usePrimaryCollection();
 
   const mountains = useMountains();
   const completedQuery = useCompletedMountainIds();
   const completed = useMemo(() => completedQuery.data ?? new Set<string>(), [completedQuery.data]);
+  const collectionMountains = useMemo(
+    () => mountainsForCollection(mountains.data ?? [], collectionId),
+    [mountains.data, collectionId],
+  );
+  const collectionDone = useMemo(
+    () => completedCountForCollection(mountains.data ?? [], completed, collectionId),
+    [mountains.data, completed, collectionId],
+  );
 
   const visible = useMemo(
-    () => filterMountains(mountains.data ?? [], { filter, region, search, completed }),
-    [mountains.data, filter, region, search, completed],
+    () => filterMountains(collectionMountains, { filter, region, search, completed }),
+    [collectionMountains, filter, region, search, completed],
   );
 
   const indexById = useMemo(() => {
     const map = new Map<string, number>();
-    (mountains.data ?? []).forEach((m, i) => map.set(m.id, m.display_order ?? i + 1));
+    collectionMountains.forEach((m, i) => map.set(m.id, i + 1));
     return map;
-  }, [mountains.data]);
+  }, [collectionMountains]);
 
   const header = (
     <View style={styles.header}>
       <TopBar title="명산 도감" />
+      <View style={styles.challenge}>
+        <CollectionSwitcher showDescription />
+      </View>
+      {collectionId === 'bac_100' ? (
+        <View style={styles.pendingNotice}>
+          <AppText variant="caption" color="inkMuted">
+            현재 공통 산 {collectionMountains.length}개 연결 · BAC 전용 {BAC_PENDING_COUNT}개는 인증지 좌표 검증 중
+          </AppText>
+        </View>
+      ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
         {MOUNTAIN_FILTERS.map((item) => (
           <Pill
@@ -64,20 +83,11 @@ export default function MountainsScreen() {
         </ScrollView>
       ) : null}
       <View style={styles.search}>
-        <SearchField
-          value={search}
-          onChangeText={setSearch}
-          onClear={() => setSearch('')}
-          placeholder="산 이름을 검색해보세요"
-        />
+        <SearchField value={search} onChangeText={setSearch} onClear={() => setSearch('')} placeholder="산 이름을 검색해보세요" />
       </View>
       <View style={styles.summary}>
-        <AppText variant="bodySmall" color="inkMuted">
-          {visible.length}개의 산
-        </AppText>
-        <AppText variant="bodySmall" color="inkMuted">
-          수집 {completed.size} / {(mountains.data ?? []).length || 100}
-        </AppText>
+        <AppText variant="bodySmall" color="inkMuted">{visible.length}개의 산</AppText>
+        <AppText variant="bodySmall" color="inkMuted">{collection.shortName} {collectionDone} / 100</AppText>
       </View>
     </View>
   );
@@ -98,35 +108,17 @@ export default function MountainsScreen() {
       return (
         <View style={styles.skeletonGrid}>
           {Array.from({ length: 6 }).map((_, i) => (
-            <View key={i} style={styles.cell}>
-              <LoadingSkeleton height={220} radius={18} />
-            </View>
+            <View key={i} style={styles.cell}><LoadingSkeleton height={220} radius={18} /></View>
           ))}
         </View>
       );
     }
     if (mountains.isError) {
-      return (
-        <EmptyState
-          title="잠깐 연결이 끊겼어요."
-          description="다시 시도해주세요."
-          actionLabel="다시 시도"
-          onAction={() => mountains.refetch()}
-        />
-      );
+      return <EmptyState title="잠깐 연결이 끊겼어요." description="다시 시도해주세요." actionLabel="다시 시도" onAction={() => mountains.refetch()} />;
     }
-    if (search.trim()) {
-      return <EmptyState title={`'${search.trim()}' 산은 도감에 없어요`} description="이름을 다시 확인해볼까요?" />;
-    }
+    if (search.trim()) return <EmptyState title={`'${search.trim()}' 산은 이 컬렉션에 없어요`} description="다른 컬렉션이나 이름을 확인해볼까요?" />;
     if (filter === 'done') {
-      return (
-        <EmptyState
-          title="아직 인증한 산이 없어요"
-          description="첫 산은 어디로 갈 건데?"
-          actionLabel="미인증 산 보기"
-          onAction={() => setFilter('todo')}
-        />
-      );
+      return <EmptyState title="아직 인증한 산이 없어요" description="첫 산은 어디로 갈 건데?" actionLabel="미인증 산 보기" onAction={() => setFilter('todo')} />;
     }
     return <EmptyState title="여기엔 산이 없네요" description="다른 필터를 골라보세요." />;
   };
@@ -158,6 +150,8 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.huge },
   header: { marginBottom: spacing.md },
+  challenge: { marginBottom: spacing.md },
+  pendingNotice: { marginBottom: spacing.sm, paddingHorizontal: spacing.xs },
   filters: { gap: spacing.sm, paddingVertical: spacing.xs },
   search: { marginTop: spacing.md },
   summary: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md },
