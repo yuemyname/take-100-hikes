@@ -53,6 +53,7 @@ supabase/migrations/ 0001_init.sql (테이블, RLS, 프로필 트리거)
 | `100PEAKS_MASTER_SPEC.md` | 사람 + 코딩 에이전트 | 제품 · 디자인 · 데이터 모델 · 구현 순서의 **단일 기준 문서**. 모든 결정은 이 문서를 따릅니다. |
 | `AGENTS.md` | 코딩 에이전트 공통 | Claude Code, Codex, Cursor 등 모든 에이전트가 따르는 작업 규칙 (변경 절차, 검증, 완료 기준). |
 | `CLAUDE.md` | Claude Code | `AGENTS.md`를 불러오는 얇은 진입점. 규칙은 `AGENTS.md`에만 둡니다. |
+| `docs/references/` | 사람 + 코딩 에이전트 | 비주얼 레퍼런스 이미지 3장과 매니페스트. UI 작업 전 반드시 확인. |
 | `README.md` | 사람 | 이 문서. 프로젝트 개요와 문서 지도. |
 
 문서 간 우선순위: `100PEAKS_MASTER_SPEC.md` > `AGENTS.md` = `CLAUDE.md` > 그 외.
@@ -85,5 +86,4 @@ React Native · Expo · TypeScript · Expo Router · Supabase (PostgreSQL / Auth
 
 ## 알려진 공백
 
-- 마스터 스펙이 언급하는 비주얼 레퍼런스 이미지(0.1장 6항, 2.1장)는 저장소에 포함되어 있지 않습니다.
 - `.gitignore`, 패키지 설정 등 프로젝트 파일은 Phase 1에서 새로 만듭니다.

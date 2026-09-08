@@ -7,4 +7,5 @@ All shared agent rules live in `AGENTS.md` (imported above). Product, design, da
 Claude-specific notes:
 
 - Follow the change protocol in `AGENTS.md`: before coding, report the phase, the files you will touch, and the acceptance criteria.
-- If the user gives no narrower task, start from the earliest incomplete phase in the spec (Phase 1 — Foundation on an empty repository).
+- Before implementing or redesigning any UI, open every image under `docs/references/` (see `docs/references/README.md`). Do not guess their contents.
+- If the user gives no narrower task, start from the earliest incomplete phase in the spec.
