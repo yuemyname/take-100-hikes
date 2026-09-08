@@ -10,6 +10,25 @@ Before making any product, UI, database, architecture, or implementation decisio
 
 That file is the single source of truth. If this file, prior chat context, generated code, or your own preference conflicts with the master spec, **the master spec wins**.
 
+## Mandatory visual references
+
+Before implementing or redesigning any UI, inspect all image assets under:
+
+`docs/references/`
+
+Expected reference set:
+- `visual-reference-01.jpg` — original mood/color/character reference
+- `visual-reference-02.jpg` — original mood/color/editorial reference
+- `100peaks-ui-concept.png` — generated 100PEAKS target UI concept
+
+Use the first two only for mood, saturated color energy, fuzzy mascot direction, collage composition, doodles, and playful editorial tone. Never copy Netflix branding, title art, typography, logos, or exact characters.
+
+Treat `100peaks-ui-concept.png` as the closest visual target for screen composition and overall product feel, while `100PEAKS_MASTER_SPEC.md` remains authoritative for actual product behavior, data model, navigation, and implementation details.
+
+If a reference image and the written spec appear to conflict, **the written master spec wins**.
+
+If these expected image files are absent, do not invent what they contain. Continue using the written visual specification and explicitly note that the binary references are missing.
+
 ## Working rules
 
 1. Do not redesign the product from scratch.
