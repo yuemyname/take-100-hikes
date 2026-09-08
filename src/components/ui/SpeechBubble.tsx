@@ -19,7 +19,7 @@ export function SpeechBubble({ text, tone = 'surface', tailPosition = 'left', st
   return (
     <View style={[styles.wrap, style]}>
       <View style={[styles.bubble, { backgroundColor: background }]}>
-        <AppText variant="bodySmall" color={textColor} style={styles.text}>
+        <AppText display variant="heading3" color={textColor} style={styles.text}>
           {text}
         </AppText>
       </View>
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.ink,
   },
-  text: { fontWeight: '700' },
+  text: { lineHeight: 24 },
   tail: {
     width: 0,
     height: 0,

@@ -1,9 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 
 import { spacing } from '@/constants';
+import { GUIDE_MASCOT } from '@/data/mascots';
 
 import { AppText } from './AppText';
-import { MascotBadge } from './MascotBadge';
+import { Mascot } from './Mascot';
 import { PrimaryButton } from './PrimaryButton';
 
 export interface EmptyStateProps {
@@ -11,7 +12,7 @@ export interface EmptyStateProps {
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
-  /** Show the placeholder mascot above the text. Default true. */
+  /** Show the guide mascot above the text. Default true. */
   mascot?: boolean;
 }
 
@@ -19,7 +20,7 @@ export interface EmptyStateProps {
 export function EmptyState({ title, description, actionLabel, onAction, mascot = true }: EmptyStateProps) {
   return (
     <View style={styles.wrap}>
-      {mascot ? <MascotBadge size={72} /> : null}
+      {mascot ? <Mascot look={{ ...GUIDE_MASCOT, face: 'sleepy' }} size={96} tilt={-4} /> : null}
       <AppText variant="heading3" align="center" style={styles.title}>
         {title}
       </AppText>

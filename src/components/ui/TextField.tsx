@@ -1,6 +1,6 @@
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
-import { colors, radii, spacing, typography } from '@/constants';
+import { colors, fontFamily, radii, spacing, typography } from '@/constants';
 
 import { AppText } from './AppText';
 
@@ -13,7 +13,7 @@ export interface TextFieldProps extends TextInputProps {
 export function TextField({ label, error, style, ...rest }: TextFieldProps) {
   return (
     <View style={styles.wrap}>
-      <AppText variant="bodySmall" style={styles.label}>
+      <AppText variant="bodySmall" weight="700" style={styles.label}>
         {label}
       </AppText>
       <TextInput
@@ -33,9 +33,10 @@ export function TextField({ label, error, style, ...rest }: TextFieldProps) {
 
 const styles = StyleSheet.create({
   wrap: { marginBottom: spacing.lg },
-  label: { marginBottom: spacing.sm, fontWeight: '700' },
+  label: { marginBottom: spacing.sm },
   input: {
-    ...typography.body,
+    fontSize: typography.body.fontSize,
+    fontFamily: fontFamily.medium,
     color: colors.ink,
     backgroundColor: colors.surface,
     borderWidth: 2,

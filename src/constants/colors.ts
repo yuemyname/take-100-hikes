@@ -23,3 +23,14 @@ export const colors = {
 } as const;
 
 export type ColorToken = keyof typeof colors;
+
+/**
+ * Photography placeholder tones. These are deliberately dark and desaturated
+ * so an empty photo slot still reads as a serious mountain, never as a broken
+ * image. Not for UI chrome; use `colors` for that.
+ */
+export const photoTones = {
+  sky: '#2B2A27',
+  ridgeFar: '#4A4843',
+  ridgeNear: '#1A1917',
+} as const;

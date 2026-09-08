@@ -2,7 +2,8 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
-import { AppText, MascotBadge, PrimaryButton, Screen, SecondaryButton, SpeechBubble, TextField } from '@/components/ui';
+import { AppText, Mascot, PrimaryButton, Screen, SecondaryButton, SpeechBubble, TextField, Wordmark } from '@/components/ui';
+import { GUIDE_MASCOT } from '@/data/mascots';
 import { colors, spacing } from '@/constants';
 import { fieldErrors, signInSchema, useAuth } from '@/features/auth';
 import { authErrorMessage } from '@/features/auth/messages';
@@ -36,14 +37,12 @@ export default function SignInScreen() {
     <Screen contentContainerStyle={styles.content}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.hero}>
-          <AppText variant="displayL" style={styles.wordmark}>
-            100PEAKS
-          </AppText>
+          <Wordmark size={40} multicolor />
           <AppText variant="body" color="inkMuted">
             100개의 산, 100개의 이야기.
           </AppText>
           <View style={styles.mascotRow}>
-            <MascotBadge size={72} color={colors.yellow} />
+            <Mascot look={GUIDE_MASCOT} size={96} tilt={-5} />
             <SpeechBubble text="이번엔 어디 갈 건데?" tone="surface" style={styles.bubble} />
           </View>
         </View>
@@ -101,7 +100,6 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, justifyContent: 'center', paddingVertical: spacing.xxxl },
   hero: { marginBottom: spacing.xxxl },
-  wordmark: { letterSpacing: 2 },
   mascotRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: spacing.xxl, gap: spacing.md },
   bubble: { marginTop: spacing.xs },
   formError: { marginBottom: spacing.md },

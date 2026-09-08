@@ -19,7 +19,7 @@ export function Pill({ label, selected = false, onPress, tone = 'ink' }: PillPro
 
   const inner = (
     <View style={[styles.pill, { backgroundColor: background, borderColor: selected ? background : colors.border }]}>
-      <AppText variant="bodySmall" color={textColor} style={styles.label}>
+      <AppText variant="bodySmall" weight="700" color={textColor}>
         {label}
       </AppText>
     </View>
@@ -49,5 +49,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
-  label: { fontWeight: '700' },
 });

@@ -49,9 +49,9 @@ export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
               style={styles.item}
             >
               <View style={[styles.verifyButton, focused ? styles.verifyButtonActive : null]}>
-                <MaterialCommunityIcons name="camera" size={26} color={focused ? colors.ink : colors.surface} />
+                <MaterialCommunityIcons name="camera" size={26} color={colors.surface} />
               </View>
-              <AppText variant="caption" style={styles.label}>
+              <AppText variant="caption" weight={focused ? '700' : '500'} color={focused ? 'ink' : 'inkMuted'} style={styles.label}>
                 {item.label}
               </AppText>
             </Pressable>
@@ -72,7 +72,7 @@ export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
               size={26}
               color={focused ? colors.ink : colors.inkMuted}
             />
-            <AppText variant="caption" color={focused ? 'ink' : 'inkMuted'} style={[styles.label, focused ? styles.labelActive : null]}>
+            <AppText variant="caption" weight={focused ? '700' : '500'} color={focused ? 'ink' : 'inkMuted'} style={styles.label}>
               {item.label}
             </AppText>
           </Pressable>
@@ -98,17 +98,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   label: { marginTop: spacing.xxs },
-  labelActive: { fontWeight: '700' },
   verifyButton: {
     width: 52,
     height: 52,
     borderRadius: radii.pill,
-    backgroundColor: colors.ink,
+    backgroundColor: colors.blue,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -spacing.xl,
     borderWidth: 3,
     borderColor: colors.surface,
   },
-  verifyButtonActive: { backgroundColor: colors.yellow, borderColor: colors.ink },
+  verifyButtonActive: { borderColor: colors.ink },
 });

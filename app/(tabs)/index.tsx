@@ -1,73 +1,109 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, Avatar, MascotBadge, ProgressCounter, Screen, SpeechBubble, TopBar } from '@/components/ui';
+import {
+  AppText,
+  Avatar,
+  LoadingSkeleton,
+  Mascot,
+  MountainCard,
+  MountainPhoto,
+  ProgressCounter,
+  Screen,
+  SpeechBubble,
+  StickyNote,
+  TopBar,
+} from '@/components/ui';
 import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
+import { GUIDE_MASCOT } from '@/data/mascots';
 import { useAuth } from '@/features/auth';
+import { useCompletedMountainIds, useMountains } from '@/features/mountains';
 import { TOTAL_MOUNTAINS } from '@/types';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
-/** Four one-tap quick actions — spec §4.1. */
-const QUICK_ACTIONS: { label: string; icon: IconName; href: Href; tone: string }[] = [
-  { label: '명산 도감', icon: 'image-filter-hdr', href: '/mountains', tone: colors.blue },
-  { label: '인증하기', icon: 'camera', href: '/verify', tone: colors.yellow },
-  { label: '친구', icon: 'account-group', href: '/friends', tone: colors.pink },
-  { label: '내 기록', icon: 'notebook', href: '/profile', tone: colors.green },
+/** Four one-tap quick actions — spec §4.1, subtitles per the UI concept. */
+const QUICK_ACTIONS: { label: string; sub: string; icon: IconName; href: Href; tone: string; iconColor: string }[] = [
+  { label: '명산 도감', sub: '100대 명산', icon: 'image-filter-hdr', href: '/mountains', tone: colors.green, iconColor: colors.surface },
+  { label: '인증하기', sub: '지금 여기서!', icon: 'camera', href: '/verify', tone: colors.blue, iconColor: colors.surface },
+  { label: '친구', sub: '함께 오르는 재미', icon: 'account-group', href: '/friends', tone: colors.pink, iconColor: colors.surface },
+  { label: '내 기록', sub: '나의 등산 이야기', icon: 'notebook', href: '/profile', tone: colors.yellow, iconColor: colors.ink },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user, status } = useAuth();
+  const mountains = useMountains();
+  const completedQuery = useCompletedMountainIds();
 
-  // Real progress arrives with the certification queries in later phases.
-  const completed = 0;
-  const remaining = TOTAL_MOUNTAINS - completed;
+  const completed = useMemo(() => completedQuery.data ?? new Set<string>(), [completedQuery.data]);
+  const count = completed.size;
+  const remaining = TOTAL_MOUNTAINS - count;
+
   const displayName =
     (user?.user_metadata as { display_name?: string } | undefined)?.display_name ??
     (status === 'guest' ? '게스트' : null);
+
+  // Hero shows the most recently featured collected mountain, else the next target.
+  const hero = useMemo(() => {
+    const list = mountains.data ?? [];
+    return list.find((m) => completed.has(m.id)) ?? list[0] ?? null;
+  }, [mountains.data, completed]);
+
+  const nextTargets = useMemo(() => (mountains.data ?? []).filter((m) => !completed.has(m.id)).slice(0, 2), [mountains.data, completed]);
+
+  const bubble = count === 0 ? '첫 산은 어디로 갈 건데?' : `아직 ${remaining}개나 남았는데?`;
 
   return (
     <Screen>
       <TopBar
         wordmark
         right={
-          <Pressable
-            onPress={() => router.push('/profile')}
-            accessibilityRole="button"
-            accessibilityLabel="내 프로필"
-            hitSlop={8}
-          >
+          <Pressable onPress={() => router.push('/profile')} accessibilityRole="button" accessibilityLabel="내 프로필" hitSlop={8}>
             <Avatar name={displayName} size="md" />
           </Pressable>
         }
       />
 
       <View style={styles.progress}>
-        <ProgressCounter completed={completed} caption={`아직 ${remaining}개나 남았는데?`} />
+        {completedQuery.isLoading ? (
+          <LoadingSkeleton height={46} width="45%" />
+        ) : (
+          <ProgressCounter completed={count} />
+        )}
       </View>
 
-      <View style={styles.hero} accessibilityLabel="산 사진 영역">
-        <View style={styles.heroPhoto}>
-          <MaterialCommunityIcons name="image-filter-hdr" size={72} color={colors.surface} />
-          <AppText variant="caption" color="surface" style={styles.heroHint}>
-            첫 산을 인증하면 여기에 사진이 걸려요
-          </AppText>
-        </View>
+      <View style={styles.hero}>
+        <MountainPhoto
+          uri={hero?.image_url}
+          seed={hero?.display_order ?? 3}
+          radius={radii.cardLarge}
+          style={styles.heroPhoto}
+          accessibilityLabel={hero ? `${hero.name_ko} 사진` : '산 사진'}
+        />
+        {hero ? (
+          <Pressable
+            onPress={() => router.push({ pathname: '/mountain/[id]', params: { id: hero.id } })}
+            accessibilityRole="button"
+            accessibilityLabel={`${hero.name_ko} 상세 보기`}
+            style={styles.heroTag}
+          >
+            <AppText variant="caption" weight="700" color="surface">
+              {hero.name_ko} · {hero.altitude_m?.toLocaleString('ko-KR')}m
+            </AppText>
+          </Pressable>
+        ) : null}
         <View style={styles.mascotOverlay}>
-          <SpeechBubble text="이번엔 어디 갈 건데?" tone="yellow" />
-          <View style={styles.mascot}>
-            <MascotBadge size={64} color={colors.pink} />
+          <SpeechBubble text={bubble} tone="surface" />
+          <View style={styles.mascotBody}>
+            <Mascot look={GUIDE_MASCOT} size={112} tilt={-6} accessibilityLabel="백픽스 가이드 캐릭터" />
           </View>
         </View>
-      </View>
-
-      <View style={styles.quote}>
-        <AppText variant="heading2">산은 왜 하는 건데?</AppText>
-        <AppText variant="heading3" color="inkMuted">
-          — 그냥 좋으니까.
-        </AppText>
+        <View style={styles.note}>
+          <StickyNote lines={['산은 왜 하는 건데?', '— 그냥 좋으니까.']} tone="yellow" tilt={3} />
+        </View>
       </View>
 
       <View style={styles.actions}>
@@ -76,69 +112,89 @@ export default function HomeScreen() {
             key={action.label}
             onPress={() => router.push(action.href)}
             accessibilityRole="button"
-            accessibilityLabel={action.label}
+            accessibilityLabel={`${action.label}, ${action.sub}`}
             style={({ pressed }) => [styles.action, pressed ? styles.actionPressed : null]}
           >
             <View style={[styles.actionIcon, { backgroundColor: action.tone }]}>
-              <MaterialCommunityIcons
-                name={action.icon}
-                size={22}
-                color={action.tone === colors.yellow ? colors.ink : colors.surface}
-              />
+              <MaterialCommunityIcons name={action.icon} size={24} color={action.iconColor} />
             </View>
-            <AppText variant="bodySmall" style={styles.actionLabel}>
-              {action.label}
+            <AppText variant="heading3">{action.label}</AppText>
+            <AppText variant="caption" color="inkMuted">
+              {action.sub}
             </AppText>
           </Pressable>
         ))}
       </View>
+
+      {nextTargets.length > 0 ? (
+        <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <AppText variant="heading2">이번엔 어디 갈 건데?</AppText>
+            <Pressable onPress={() => router.push('/mountains')} accessibilityRole="button" accessibilityLabel="도감 전체 보기" hitSlop={8}>
+              <AppText variant="bodySmall" weight="700" color="blue">
+                전체 보기
+              </AppText>
+            </Pressable>
+          </View>
+          <View style={styles.targets}>
+            {nextTargets.map((m) => (
+              <View key={m.id} style={styles.targetCell}>
+                <MountainCard
+                  mountain={m}
+                  index={m.display_order ?? 0}
+                  completed={false}
+                  onPress={() => router.push({ pathname: '/mountain/[id]', params: { id: m.id } })}
+                />
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   progress: { marginTop: spacing.sm },
-  hero: { marginTop: spacing.xxl },
-  heroPhoto: {
-    height: 260,
-    borderRadius: radii.cardLarge,
-    backgroundColor: colors.inkMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    // Leave the lower-left corner free for the mascot + speech bubble overlay.
-    paddingBottom: 96,
-    overflow: 'hidden',
-  },
-  heroHint: { marginTop: spacing.sm },
-  mascotOverlay: {
+  hero: { marginTop: spacing.xxl, marginBottom: spacing.xxxl },
+  heroPhoto: { height: 300 },
+  heroTag: {
     position: 'absolute',
-    left: spacing.lg,
-    bottom: -spacing.lg,
-    alignItems: 'flex-start',
+    top: spacing.md,
+    right: spacing.md,
+    backgroundColor: colors.ink,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    minHeight: 32,
+    justifyContent: 'center',
   },
-  mascot: { marginTop: spacing.xs, marginLeft: spacing.sm },
-  quote: { marginTop: spacing.xxxl + spacing.sm },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.xxl },
+  mascotOverlay: { position: 'absolute', left: spacing.md, top: spacing.xl, alignItems: 'flex-start' },
+  mascotBody: { marginTop: spacing.xs, marginLeft: spacing.sm },
+  note: { position: 'absolute', right: spacing.sm, bottom: -spacing.xl },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.md },
   action: {
     width: '47%',
     flexGrow: 1,
-    minHeight: MIN_TOUCH_TARGET + 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
+    minHeight: MIN_TOUCH_TARGET + 60,
     backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: radii.card,
     padding: spacing.lg,
+    gap: spacing.xxs,
   },
   actionPressed: { backgroundColor: colors.surfaceMuted },
   actionIcon: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: radii.chip,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
-  actionLabel: { fontWeight: '700' },
+  section: { marginTop: spacing.xxxl },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
+  targets: { flexDirection: 'row', gap: spacing.md },
+  targetCell: { flex: 1 },
 });

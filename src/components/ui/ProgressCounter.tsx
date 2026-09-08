@@ -51,6 +51,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: spacing.md,
   },
-  fill: { height: '100%', backgroundColor: colors.blue, borderRadius: radii.pill },
+  fill: { height: '100%', backgroundColor: colors.success, borderRadius: radii.pill },
   caption: { marginTop: spacing.md },
 });

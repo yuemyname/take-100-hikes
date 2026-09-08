@@ -8,8 +8,9 @@
 
 ## 현재 상태
 
-- **Phase 1 — Foundation 완료.** Expo + TypeScript 프로젝트, 디자인 토큰, 5탭 내비게이션, Supabase 클라이언트, 인증 셸(로그인 / 가입), 기본 UI 컴포넌트, 초기 DB 마이그레이션이 들어 있습니다.
-- 탭 화면의 본문(도감 그리드, 인증 플로우, 친구 목록, 기록)은 아직 빈 상태 셸입니다. 다음 단계는 마스터 스펙 19장의 **Phase 2 — Mountains**입니다.
+- **Phase 1 — Foundation 완료.** Expo + TypeScript 프로젝트, 디자인 토큰, 5탭 내비게이션, Supabase 클라이언트, 인증 셸(로그인 / 가입), 기본 UI 컴포넌트, 초기 DB 마이그레이션.
+- **Phase 2 — Mountains 완료.** 100대 명산 시드 데이터(`src/data/mountains.json` → `supabase/seed.sql`), 명산 도감 그리드(필터·검색·수집 상태), 산 상세(히어로·마스코트·즐겨찾기·소개/인증자 탭·인증 CTA), 홈·MY의 진행도 연동, 산별 SVG 마스코트 시스템.
+- 인증 플로우, 친구 목록, 산 상세의 인증자 목록은 아직 셸입니다. 다음 단계는 마스터 스펙 19장의 **Phase 3 — Social**입니다.
 - 이전에 있던 레거시 프로젝트(MountainBot)는 모두 제거되었습니다.
 
 ## 시작하기
@@ -27,7 +28,9 @@ npm run typecheck      # tsc --noEmit
 npm run lint           # expo lint
 ```
 
-Supabase 스키마는 `supabase/migrations/0001_init.sql`을 프로젝트 SQL 편집기에서 실행하거나 `supabase db push`로 적용합니다.
+Supabase 스키마는 `supabase/migrations/0001_init.sql`을 프로젝트 SQL 편집기에서 실행하거나 `supabase db push`로 적용하고, 이어서 `supabase/seed.sql`로 100대 명산을 넣습니다. 시드 SQL은 `node scripts/generate-seed.js`로 `src/data/mountains.json`에서 다시 만들 수 있습니다.
+
+산 사진은 `mountains.image_url`에 URL을 넣으면 바로 표시됩니다(권장: Supabase Storage 공개 버킷 `mountains/{slug}.jpg`). URL이 없으면 어두운 산 실루엣 플레이스홀더가 나옵니다.
 `.env`가 없으면 로그인 화면에 안내가 뜨고, 개발 빌드에서는 "설정 없이 둘러보기"로 탭 화면을 볼 수 있습니다.
 
 ## 프로젝트 구조
@@ -37,13 +40,18 @@ app/                 Expo Router 라우트
   _layout.tsx        Provider + 인증 게이트 (Stack.Protected)
   (auth)/            sign-in, sign-up
   (tabs)/            index(홈), mountains, verify, friends, profile
+  mountain/[id].tsx  산 상세
 src/
   constants/         colors, typography, spacing, radii (스펙 §2 토큰)
-  components/ui/     Screen, TopBar, BottomTabBar, PrimaryButton, Pill, Avatar, ProgressCounter, ...
+  components/ui/     Screen, TopBar, BottomTabBar, Wordmark, Mascot(SVG), MountainPhoto, MountainCard, ...
+  data/              mountains.json(100대 명산), mascots.ts(산별 캐릭터 룩), demo.ts(게스트 모드 데모 상태)
   features/auth/     AuthProvider, zod 스키마, 에러 문구
-  lib/               supabase 클라이언트, geo(Haversine), env, queryClient
+  features/mountains/ Supabase/로컬 데이터 접근, React Query 훅, 필터 로직
+  lib/               supabase 클라이언트, geo(Haversine), env, fonts, queryClient
   types/             DB row 타입 (스펙 §9)
 supabase/migrations/ 0001_init.sql (테이블, RLS, 프로필 트리거)
+supabase/seed.sql    100대 명산 시드 (scripts/generate-seed.js로 생성)
+docs/references/     비주얼 레퍼런스 3장 + 매니페스트
 ```
 
 ## 문서 안내

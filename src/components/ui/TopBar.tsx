@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, MIN_TOUCH_TARGET, spacing } from '@/constants';
 
 import { AppText } from './AppText';
+import { Wordmark } from './Wordmark';
 
 export interface TopBarProps {
   title?: string;
@@ -33,9 +34,7 @@ export function TopBar({ title, wordmark = false, onBack, right }: TopBarProps) 
 
       <View style={styles.center}>
         {wordmark ? (
-          <AppText variant="heading2" style={styles.wordmark} accessibilityRole="header">
-            100PEAKS
-          </AppText>
+          <Wordmark size={22} />
         ) : title ? (
           <AppText variant="heading3" accessibilityRole="header" numberOfLines={1}>
             {title}
@@ -64,5 +63,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  wordmark: { letterSpacing: 1.5 },
 });
