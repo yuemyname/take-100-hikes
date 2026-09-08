@@ -6,6 +6,7 @@ All shared agent rules live in `AGENTS.md` (imported above).
 
 Product behavior, navigation, data, and business rules come from `100PEAKS_MASTER_SPEC.md`.
 The current official character/visual interpretation is additionally locked in `docs/OFFICIAL_VISUAL_DIRECTION.md` and overrides older mascot-collection language in the master spec where they conflict.
+For mountain-list and GPS-verification data work, read `docs/data/BAC100_DATA_POLICY.md` and `docs/data/bac100-candidates.csv` first. The BAC 명산100 challenge list is the canonical 100-target candidate set; mountain identity and GPS verification point are separate, and pending coordinates must never be guessed or activated for certification.
 
 Claude-specific notes:
 
