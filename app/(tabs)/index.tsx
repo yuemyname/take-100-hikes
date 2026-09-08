@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   progress: { marginTop: 2 },
   hero: { marginTop: spacing.lg, marginBottom: spacing.huge + spacing.xl, minHeight: 410 },
   heroPhoto: { height: 390 },
-  heroScrim: { ...StyleSheet.absoluteFillObject, bottom: 20, borderRadius: radii.cardLarge, backgroundColor: 'rgba(0,0,0,0.05)' },
+  heroScrim: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 20, borderRadius: radii.cardLarge, backgroundColor: 'rgba(0,0,0,0.05)' },
   heroTag: { position: 'absolute', top: spacing.md, right: spacing.md, backgroundColor: colors.ink, borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, minHeight: 32, justifyContent: 'center' },
   mountainSticker: { position: 'absolute', width: 78, height: 78, left: spacing.md, top: spacing.md, transform: [{ rotate: '-7deg' }] },
   bubble: { position: 'absolute', right: spacing.md, top: 72, maxWidth: 190 },

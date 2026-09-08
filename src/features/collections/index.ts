@@ -36,7 +36,10 @@ const queryKey = ['primaryCollection'] as const;
 
 type StoredSelection = { id: CollectionId; hasChosen: boolean };
 
-export const getCollection = (id: CollectionId) => COLLECTIONS.find((c) => c.id === id) ?? COLLECTIONS[0];
+export const DEFAULT_COLLECTION: CollectionDefinition = COLLECTIONS[0] as CollectionDefinition;
+
+export const getCollection = (id: CollectionId): CollectionDefinition =>
+  COLLECTIONS.find((c) => c.id === id) ?? DEFAULT_COLLECTION;
 
 export function usePrimaryCollection() {
   const queryClient = useQueryClient();

@@ -8,30 +8,34 @@ export type OfficialCharacterColor = 'yellow' | 'red' | 'blue' | 'pink';
  * - They are NOT assigned one-to-one to mountains.
  * - Mountains are the collectible object; characters are recurring brand actors.
  * - Keep assets/mascots as an experimental/supporting library for future reuse.
+ *
+ * Metro only resolves lowercase asset extensions, so the numbered uploads
+ * (`b.Take a Hike_Character_*.PNG`) are referenced through the lowercase
+ * copies in assets/official/characters/.
  */
 export const OFFICIAL_CHARACTERS = {
   yellow: [
-    require('../../assets/official/b.Take a Hike_Character_YELLOW (1).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_YELLOW (2).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_YELLOW (3).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_YELLOW (4).PNG'),
+    require('../../assets/official/characters/yellow-1.png'),
+    require('../../assets/official/characters/yellow-2.png'),
+    require('../../assets/official/characters/yellow-3.png'),
+    require('../../assets/official/characters/yellow-4.png'),
   ],
   red: [
-    require('../../assets/official/b.Take a Hike_Character_RED (1).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_RED (2).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_RED (3).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_RED (4).PNG'),
+    require('../../assets/official/characters/red-1.png'),
+    require('../../assets/official/characters/red-2.png'),
+    require('../../assets/official/characters/red-3.png'),
+    require('../../assets/official/characters/red-4.png'),
   ],
   blue: [
-    require('../../assets/official/b.Take a Hike_Character_BLUE (2).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_BLUE (3).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_BLUE (4).PNG'),
+    require('../../assets/official/characters/blue-2.png'),
+    require('../../assets/official/characters/blue-3.png'),
+    require('../../assets/official/characters/blue-4.png'),
   ],
   pink: [
-    require('../../assets/official/b.Take a Hike_Character_PINK (1).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_PINK (2).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_PINK (3).PNG'),
-    require('../../assets/official/b.Take a Hike_Character_PINK (4).PNG'),
+    require('../../assets/official/characters/pink-1.png'),
+    require('../../assets/official/characters/pink-2.png'),
+    require('../../assets/official/characters/pink-3.png'),
+    require('../../assets/official/characters/pink-4.png'),
   ],
 } as const;
 
