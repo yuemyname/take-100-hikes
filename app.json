@@ -1,0 +1,65 @@
+{
+  "expo": {
+    "name": "100PEAKS",
+    "slug": "100peaks",
+    "version": "0.1.0",
+    "scheme": "100peaks",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF9ED"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.hundredpeaks.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "정상 인증을 위해 현재 위치가 필요해요.",
+        "NSCameraUsageDescription": "정상 인증 사진을 촬영하기 위해 카메라가 필요해요."
+      }
+    },
+    "android": {
+      "package": "com.hundredpeaks.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF9ED",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FFF9ED"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "정상 인증을 위해 현재 위치가 필요해요."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "정상 인증 사진을 촬영하기 위해 카메라가 필요해요."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

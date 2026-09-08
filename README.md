@@ -8,9 +8,43 @@
 
 ## 현재 상태
 
-- 기획 / 스펙 단계입니다. 앱 코드는 아직 없습니다.
+- **Phase 1 — Foundation 완료.** Expo + TypeScript 프로젝트, 디자인 토큰, 5탭 내비게이션, Supabase 클라이언트, 인증 셸(로그인 / 가입), 기본 UI 컴포넌트, 초기 DB 마이그레이션이 들어 있습니다.
+- 탭 화면의 본문(도감 그리드, 인증 플로우, 친구 목록, 기록)은 아직 빈 상태 셸입니다. 다음 단계는 마스터 스펙 19장의 **Phase 2 — Mountains**입니다.
 - 이전에 있던 레거시 프로젝트(MountainBot)는 모두 제거되었습니다.
-- 다음 단계는 마스터 스펙 19장의 **Phase 1 — Foundation**(Expo + TypeScript 프로젝트, 디자인 토큰, 내비게이션, Supabase 클라이언트, 인증 셸, 기본 UI 컴포넌트)입니다.
+
+## 시작하기
+
+```bash
+npm install
+cp .env.example .env   # Supabase URL과 anon key 입력
+npm start              # Expo 개발 서버 (i: iOS 시뮬레이터, a: Android, w: 웹)
+```
+
+검증 명령:
+
+```bash
+npm run typecheck      # tsc --noEmit
+npm run lint           # expo lint
+```
+
+Supabase 스키마는 `supabase/migrations/0001_init.sql`을 프로젝트 SQL 편집기에서 실행하거나 `supabase db push`로 적용합니다.
+`.env`가 없으면 로그인 화면에 안내가 뜨고, 개발 빌드에서는 "설정 없이 둘러보기"로 탭 화면을 볼 수 있습니다.
+
+## 프로젝트 구조
+
+```text
+app/                 Expo Router 라우트
+  _layout.tsx        Provider + 인증 게이트 (Stack.Protected)
+  (auth)/            sign-in, sign-up
+  (tabs)/            index(홈), mountains, verify, friends, profile
+src/
+  constants/         colors, typography, spacing, radii (스펙 §2 토큰)
+  components/ui/     Screen, TopBar, BottomTabBar, PrimaryButton, Pill, Avatar, ProgressCounter, ...
+  features/auth/     AuthProvider, zod 스키마, 에러 문구
+  lib/               supabase 클라이언트, geo(Haversine), env, queryClient
+  types/             DB row 타입 (스펙 §9)
+supabase/migrations/ 0001_init.sql (테이블, RLS, 프로필 트리거)
+```
 
 ## 문서 안내
 
