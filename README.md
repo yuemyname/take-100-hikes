@@ -81,6 +81,13 @@ docs/references/     비주얼 레퍼런스 3장 + 매니페스트
 
 자세한 규칙은 마스터 스펙 0장, 10장, 26장을 참고하세요.
 
+## 캐릭터(마스코트) 시스템
+
+- 컨셉 보드(`docs/references/D5F2733C-…png`)의 방향을 따릅니다: 전신 털북숭이 몬스터, 긴 팔, 털 속에 작게 박힌 얼굴 패치, 흰 배·손·발, 단색 몸에 검정 털 외곽선, 사진 위에 크게 얹히는 존재감.
+- 구현은 `src/components/ui/Mascot.tsx`의 벡터 일러스트입니다. 파츠(몸통·머리·팔·다리)를 털 결 외곽선으로 생성하고 포즈 3종(만세·손 흔들기·앉기), 눈 스타일 5종, 소품(깃발·눈·나무·바위·꽃·모자)을 조합합니다.
+- 산별 룩은 `src/data/mascots.ts`에서 정합니다. 설악산(흰 예티·파란 얼굴), 한라산(초록·화산 얼굴), 북한산(회색 바위), 지리산(흙빛·나무), 덕유산(파랑·고글), 소백산(분홍·꽃)은 수작업이고 나머지는 키에서 결정적으로 파생됩니다.
+- 실제 일러스트 에셋으로 교체하려면 해당 룩에 `image: require('../../assets/mascots/<key>.png')`만 추가하면 됩니다. 나머지 화면 배치는 그대로 동작합니다.
+
 ## 예정 기술 스택
 
 React Native · Expo · TypeScript · Expo Router · Supabase (PostgreSQL / Auth / Storage) · expo-location · expo-camera · TanStack React Query · Zod

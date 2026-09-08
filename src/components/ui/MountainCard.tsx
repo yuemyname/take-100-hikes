@@ -18,6 +18,9 @@ export interface MountainCardProps {
 
 const formatAltitude = (m: number | null) => (m === null ? '' : `${m.toLocaleString('ko-KR')}m`);
 
+/** Mascot width relative to a ~170pt card: waist-up, covering most of the photo (UI concept). */
+const CARD_MASCOT_SIZE = 150;
+
 /** Image-first collection card — spec §4.2. */
 export function MountainCard({ mountain, index, completed, onPress }: MountainCardProps) {
   const look = getMascotLook(mountain.mascot_key);
@@ -36,8 +39,8 @@ export function MountainCard({ mountain, index, completed, onPress }: MountainCa
             <CheckBadge />
           </View>
         ) : null}
-        <View style={styles.mascot}>
-          <Mascot look={look} size={56} silhouette={!completed} tilt={completed ? -6 : 0} />
+        <View style={styles.mascot} pointerEvents="none">
+          <Mascot look={look} size={CARD_MASCOT_SIZE} silhouette={!completed} tilt={completed ? -3 : 0} accessibilityLabel={`${mountain.name_ko} 캐릭터`} />
         </View>
       </View>
       <View style={styles.meta}>
@@ -65,9 +68,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   pressed: { opacity: 0.9 },
-  photoWrap: { aspectRatio: 1, position: 'relative' },
+  photoWrap: { aspectRatio: 1, position: 'relative', overflow: 'hidden' },
   photo: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   check: { position: 'absolute', top: spacing.sm, right: spacing.sm },
-  mascot: { position: 'absolute', left: spacing.xs, bottom: 0 },
+  mascot: { position: 'absolute', left: '50%', marginLeft: -CARD_MASCOT_SIZE / 2, bottom: -CARD_MASCOT_SIZE * 0.5 },
   meta: { padding: spacing.md, gap: spacing.xxs },
 });

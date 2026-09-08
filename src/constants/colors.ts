@@ -34,3 +34,16 @@ export const photoTones = {
   ridgeFar: '#4A4843',
   ridgeNear: '#1A1917',
 } as const;
+
+/**
+ * Illustration-only palette for the mascot and hand-drawn props (wood sign,
+ * face patches). These are artwork colors, not UI chrome; UI keeps to `colors`.
+ */
+export const illustration = {
+  wood: '#C9925A',
+  woodDark: '#6B3F1D',
+  woodInk: '#2A1606',
+  faceCream: '#FFF1D6',
+  faceSkin: '#FFD9A8',
+  furShade: 'rgba(0,0,0,0.18)',
+} as const;

@@ -20,7 +20,7 @@ export interface EmptyStateProps {
 export function EmptyState({ title, description, actionLabel, onAction, mascot = true }: EmptyStateProps) {
   return (
     <View style={styles.wrap}>
-      {mascot ? <Mascot look={{ ...GUIDE_MASCOT, face: 'sleepy' }} size={96} tilt={-4} /> : null}
+      {mascot ? <Mascot look={{ ...GUIDE_MASCOT, eyes: 'sleepy', pose: 'sit' }} size={150} tilt={-3} /> : null}
       <AppText variant="heading3" align="center" style={styles.title}>
         {title}
       </AppText>

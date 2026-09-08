@@ -1,4 +1,4 @@
-export { colors, photoTones, type ColorToken } from './colors';
+export { colors, photoTones, illustration, type ColorToken } from './colors';
 export {
   typography,
   fontFamily,

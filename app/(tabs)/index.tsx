@@ -12,8 +12,8 @@ import {
   MountainPhoto,
   ProgressCounter,
   Screen,
+  SignPost,
   SpeechBubble,
-  StickyNote,
   TopBar,
 } from '@/components/ui';
 import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
@@ -24,12 +24,15 @@ import { TOTAL_MOUNTAINS } from '@/types';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
+/** Guide character width on the home hero: about half the photo, sitting on the rocks (UI concept). */
+const HERO_MASCOT_SIZE = 190;
+
 /** Four one-tap quick actions — spec §4.1, subtitles per the UI concept. */
-const QUICK_ACTIONS: { label: string; sub: string; icon: IconName; href: Href; tone: string; iconColor: string }[] = [
-  { label: '명산 도감', sub: '100대 명산', icon: 'image-filter-hdr', href: '/mountains', tone: colors.green, iconColor: colors.surface },
-  { label: '인증하기', sub: '지금 여기서!', icon: 'camera', href: '/verify', tone: colors.blue, iconColor: colors.surface },
-  { label: '친구', sub: '함께 오르는 재미', icon: 'account-group', href: '/friends', tone: colors.pink, iconColor: colors.surface },
-  { label: '내 기록', sub: '나의 등산 이야기', icon: 'notebook', href: '/profile', tone: colors.yellow, iconColor: colors.ink },
+const QUICK_ACTIONS: { label: string; sub: string; icon: IconName; href: Href; tone: string }[] = [
+  { label: '명산 도감', sub: '100대 명산', icon: 'image-filter-hdr', href: '/mountains', tone: colors.green },
+  { label: '인증하기', sub: '지금 여기서!', icon: 'camera', href: '/verify', tone: colors.red },
+  { label: '친구', sub: '함께 오르는 재미', icon: 'account-group', href: '/friends', tone: colors.pink },
+  { label: '내 기록', sub: '나의 등산 이야기', icon: 'notebook', href: '/profile', tone: colors.blue },
 ];
 
 export default function HomeScreen() {
@@ -95,14 +98,14 @@ export default function HomeScreen() {
             </AppText>
           </Pressable>
         ) : null}
-        <View style={styles.mascotOverlay}>
-          <SpeechBubble text={bubble} tone="surface" />
-          <View style={styles.mascotBody}>
-            <Mascot look={GUIDE_MASCOT} size={112} tilt={-6} accessibilityLabel="백픽스 가이드 캐릭터" />
-          </View>
+        <View style={styles.bubble} pointerEvents="none">
+          <SpeechBubble text={bubble} tone="surface" tailPosition="left" />
         </View>
-        <View style={styles.note}>
-          <StickyNote lines={['산은 왜 하는 건데?', '— 그냥 좋으니까.']} tone="yellow" tilt={3} />
+        <View style={styles.mascotBody} pointerEvents="none">
+          <Mascot look={{ ...GUIDE_MASCOT, pose: 'sit' }} size={HERO_MASCOT_SIZE} tilt={-4} accessibilityLabel="백픽스 가이드 캐릭터" />
+        </View>
+        <View style={styles.sign} pointerEvents="none">
+          <SignPost lines={['산은 왜 하는 건데?', '— 그냥 좋으니까!']} tilt={-2} />
         </View>
       </View>
 
@@ -115,9 +118,7 @@ export default function HomeScreen() {
             accessibilityLabel={`${action.label}, ${action.sub}`}
             style={({ pressed }) => [styles.action, pressed ? styles.actionPressed : null]}
           >
-            <View style={[styles.actionIcon, { backgroundColor: action.tone }]}>
-              <MaterialCommunityIcons name={action.icon} size={24} color={action.iconColor} />
-            </View>
+            <MaterialCommunityIcons name={action.icon} size={40} color={action.tone} style={styles.actionIcon} />
             <AppText variant="heading3">{action.label}</AppText>
             <AppText variant="caption" color="inkMuted">
               {action.sub}
@@ -156,8 +157,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   progress: { marginTop: spacing.sm },
-  hero: { marginTop: spacing.xxl, marginBottom: spacing.xxxl },
-  heroPhoto: { height: 300 },
+  hero: { marginTop: spacing.xl, marginBottom: spacing.huge + spacing.lg },
+  heroPhoto: { height: 380 },
   heroTag: {
     position: 'absolute',
     top: spacing.md,
@@ -169,30 +170,25 @@ const styles = StyleSheet.create({
     minHeight: 32,
     justifyContent: 'center',
   },
-  mascotOverlay: { position: 'absolute', left: spacing.md, top: spacing.xl, alignItems: 'flex-start' },
-  mascotBody: { marginTop: spacing.xs, marginLeft: spacing.sm },
-  note: { position: 'absolute', right: spacing.sm, bottom: -spacing.xl },
+  bubble: { position: 'absolute', right: spacing.md, top: spacing.xl },
+  mascotBody: { position: 'absolute', left: spacing.sm, bottom: 56 },
+  sign: { position: 'absolute', right: spacing.md, bottom: -spacing.huge },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.md },
   action: {
     width: '47%',
     flexGrow: 1,
-    minHeight: MIN_TOUCH_TARGET + 60,
+    minHeight: MIN_TOUCH_TARGET + 72,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: radii.card,
+    borderRadius: radii.cardLarge,
     padding: spacing.lg,
     gap: spacing.xxs,
   },
   actionPressed: { backgroundColor: colors.surfaceMuted },
-  actionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.chip,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
+  actionIcon: { marginBottom: spacing.xs },
   section: { marginTop: spacing.xxxl },
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
   targets: { flexDirection: 'row', gap: spacing.md },

@@ -42,7 +42,7 @@ export default function SignInScreen() {
             100개의 산, 100개의 이야기.
           </AppText>
           <View style={styles.mascotRow}>
-            <Mascot look={GUIDE_MASCOT} size={96} tilt={-5} />
+            <Mascot look={GUIDE_MASCOT} size={150} tilt={-4} />
             <SpeechBubble text="이번엔 어디 갈 건데?" tone="surface" style={styles.bubble} />
           </View>
         </View>

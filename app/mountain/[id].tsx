@@ -23,6 +23,9 @@ import { useCertifiedUsers } from '@/features/social';
 
 type DetailTab = 'intro' | 'people';
 
+/** Character width on the detail hero: ~45% of the screen, overlapping the photo edge (UI concept). */
+const HERO_MASCOT_SIZE = 160;
+
 /** 산 상세 — spec §4.3. Certified-user list (mutual friends first) lands in Phase 3. */
 export default function MountainDetailScreen() {
   const router = useRouter();
@@ -85,11 +88,11 @@ export default function MountainDetailScreen() {
             </Pressable>
             <FavoriteButton active={favorite} onPress={() => toggle(m.id)} disabled={isToggling} />
           </SafeAreaView>
-          <View style={styles.heroMascot}>
+          <View style={styles.heroBubble} pointerEvents="none">
             <SpeechBubble text={bubble} tone="surface" tailPosition="right" />
-            <View style={styles.heroMascotBody}>
-              <Mascot look={look} size={104} silhouette={!completed} tilt={6} accessibilityLabel={`${m.name_ko} 캐릭터`} />
-            </View>
+          </View>
+          <View style={styles.heroMascot} pointerEvents="none">
+            <Mascot look={look} size={HERO_MASCOT_SIZE} silhouette={!completed} tilt={4} flip accessibilityLabel={`${m.name_ko} 캐릭터`} />
           </View>
         </View>
 
@@ -165,7 +168,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   padded: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
   gap: { height: spacing.lg },
-  hero: { height: 340, position: 'relative' },
+  hero: { height: 360, position: 'relative' },
   heroBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -180,9 +183,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroMascot: { position: 'absolute', right: spacing.lg, bottom: -spacing.md, alignItems: 'flex-end' },
-  heroMascotBody: { marginTop: spacing.xs },
-  titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
+  heroBubble: { position: 'absolute', right: spacing.lg, top: 118 },
+  heroMascot: { position: 'absolute', right: spacing.sm, bottom: -HERO_MASCOT_SIZE * 0.12 },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md, paddingRight: HERO_MASCOT_SIZE * 0.4 },
   titleText: { flex: 1 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs },
   doneChip: {
