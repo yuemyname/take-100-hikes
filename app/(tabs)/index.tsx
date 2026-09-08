@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import {
   AppText,
   Avatar,
+  InvitationCard,
   LoadingSkeleton,
   Mascot,
   MountainCard,
@@ -20,6 +21,7 @@ import {
 import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
 import { GUIDE_MASCOT } from '@/data/mascots';
 import { useAuth } from '@/features/auth';
+import { useMyInvitations, useRespondToInvitation } from '@/features/certification';
 import { useCompletedMountainIds, useMountains } from '@/features/mountains';
 import { TOTAL_MOUNTAINS } from '@/types';
 
@@ -41,6 +43,8 @@ export default function HomeScreen() {
   const { user, status } = useAuth();
   const mountains = useMountains();
   const completedQuery = useCompletedMountainIds();
+  const invitations = useMyInvitations();
+  const respond = useRespondToInvitation();
 
   const completed = useMemo(() => completedQuery.data ?? new Set<string>(), [completedQuery.data]);
   const count = completed.size;
@@ -70,6 +74,23 @@ export default function HomeScreen() {
           </Pressable>
         }
       />
+
+      {(invitations.data ?? []).length > 0 ? (
+        <View style={styles.invitations}>
+          <AppText variant="heading3">공동 인증 요청 {invitations.data?.length}</AppText>
+          {(invitations.data ?? []).map((inv) => (
+            <InvitationCard
+              key={inv.sessionId}
+              creator={inv.creator}
+              mountainName={inv.mountain.name_ko}
+              expiresAt={inv.expiresAt}
+              onAccept={() => router.push({ pathname: '/certification/join', params: { sessionId: inv.sessionId } })}
+              onDecline={() => respond.mutate({ sessionId: inv.sessionId, accept: false })}
+              declining={respond.isPending && respond.variables?.sessionId === inv.sessionId}
+            />
+          ))}
+        </View>
+      ) : null}
 
       <View style={styles.progress}>
         {completedQuery.isLoading ? (
@@ -157,6 +178,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  invitations: { marginTop: spacing.sm, marginBottom: spacing.lg, gap: spacing.md },
   progress: { marginTop: spacing.sm },
   hero: { marginTop: spacing.xl, marginBottom: spacing.huge + spacing.lg },
   heroPhoto: { height: 380 },

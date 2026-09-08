@@ -120,9 +120,13 @@ export function ProfileBody({ user, action, showCaption = false }: ProfileBodyPr
             return (
               <Pressable
                 key={c.mountainId}
-                onPress={() => router.push({ pathname: '/mountain/[id]', params: { id: m.id } })}
+                onPress={() =>
+                  c.partySize > 1
+                    ? router.push({ pathname: '/certification/session/[id]', params: { id: c.sessionId } })
+                    : router.push({ pathname: '/mountain/[id]', params: { id: m.id } })
+                }
                 accessibilityRole="button"
-                accessibilityLabel={`${m.name_ko}, ${formatCertifiedDate(c.certifiedAt)} 인증`}
+                accessibilityLabel={`${m.name_ko}, ${formatCertifiedDate(c.certifiedAt)} 인증${c.partySize > 1 ? ', 함께 인증 보기' : ''}`}
                 style={({ pressed }) => [styles.historyRow, pressed ? styles.pressed : null]}
               >
                 <MountainPhoto uri={m.image_url} seed={m.display_order ?? 1} radius={radii.chip} style={styles.historyThumb} accessibilityLabel={`${m.name_ko} 사진`} />

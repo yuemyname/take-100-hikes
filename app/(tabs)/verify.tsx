@@ -3,10 +3,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, EmptyState, LoadingSkeleton, Mascot, MountainPhoto, OFFICIAL_ART, Screen, SecondaryButton, TopBar } from '@/components/ui';
+import { AppText, EmptyState, InvitationCard, LoadingSkeleton, Mascot, MountainPhoto, OFFICIAL_ART, Screen, SecondaryButton, TopBar } from '@/components/ui';
 import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
 import { GUIDE_MASCOT } from '@/data/mascots';
-import { useSummitProximity } from '@/features/certification';
+import { useMyInvitations, useRespondToInvitation, useSummitProximity } from '@/features/certification';
 import { useCompletedMountainIds, useMountains } from '@/features/mountains';
 import { formatDistance, getDistanceMeters } from '@/lib/geo';
 
@@ -17,6 +17,8 @@ export default function VerifyScreen() {
   const mountains = useMountains();
   const completed = useCompletedMountainIds();
   const proximity = useSummitProximity(null);
+  const invitations = useMyInvitations();
+  const respond = useRespondToInvitation();
 
   // Arriving from a mountain detail CTA goes straight to the camera.
   useEffect(() => {
@@ -47,6 +49,27 @@ export default function VerifyScreen() {
           </AppText>
         </View>
       </View>
+
+      {(invitations.data ?? []).length > 0 ? (
+        <View>
+          <AppText variant="heading3" style={styles.sectionTitle}>
+            공동 인증 요청 {invitations.data?.length}
+          </AppText>
+          <View style={styles.invitations}>
+            {(invitations.data ?? []).map((inv) => (
+              <InvitationCard
+                key={inv.sessionId}
+                creator={inv.creator}
+                mountainName={inv.mountain.name_ko}
+                expiresAt={inv.expiresAt}
+                onAccept={() => router.push({ pathname: '/certification/join', params: { sessionId: inv.sessionId } })}
+                onDecline={() => respond.mutate({ sessionId: inv.sessionId, accept: false })}
+                declining={respond.isPending && respond.variables?.sessionId === inv.sessionId}
+              />
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       <AppText variant="heading3" style={styles.sectionTitle}>
         가까운 산
@@ -103,6 +126,7 @@ const styles = StyleSheet.create({
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
   heroText: { flex: 1, gap: spacing.xs },
   sectionTitle: { marginTop: spacing.xxl, marginBottom: spacing.sm },
+  invitations: { gap: spacing.md },
   card: {
     backgroundColor: colors.surface,
     borderWidth: 1.5,

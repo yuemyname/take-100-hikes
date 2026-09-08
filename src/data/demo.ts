@@ -105,8 +105,8 @@ export const DEMO_SESSIONS: DemoSession[] = [
   { id: 'demo:s-halla', mountainSlug: 'hallasan', creatorId: DEMO_ME_ID, capturedAt: '2026-05-05T00:30:00.000Z', photoUrl: null, members: [{ userId: DEMO_ME_ID, status: 'confirmed' }, { userId: id('soyeon'), status: 'confirmed' }] },
   { id: 'demo:s-jiri', mountainSlug: 'jirisan', creatorId: id('jimin'), capturedAt: '2026-03-22T21:50:00.000Z', photoUrl: null, members: [{ userId: id('jimin'), status: 'confirmed' }, { userId: DEMO_ME_ID, status: 'confirmed' }] },
   { id: 'demo:s-bukhan', mountainSlug: 'bukhansan', creatorId: DEMO_ME_ID, capturedAt: '2026-01-18T02:05:00.000Z', photoUrl: null, members: [{ userId: DEMO_ME_ID, status: 'confirmed' }] },
-  // a pending invitation (Phase 5 will surface it); not a completion yet
-  { id: 'demo:s-deogyu-pending', mountainSlug: 'deogyusan', creatorId: id('junho'), capturedAt: '2026-08-30T01:00:00.000Z', photoUrl: null, members: [{ userId: id('junho'), status: 'confirmed' }, { userId: DEMO_ME_ID, status: 'invited' }] },
+  // a pending invitation from 준호, captured two hours ago so it is still inside the 24h window
+  { id: 'demo:s-deogyu-pending', mountainSlug: 'deogyusan', creatorId: id('junho'), capturedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), photoUrl: null, members: [{ userId: id('junho'), status: 'confirmed' }, { userId: DEMO_ME_ID, status: 'invited' }] },
 
   // friends' other mountains
   { id: 'demo:s-jimin-1', mountainSlug: 'deogyusan', creatorId: id('jimin'), capturedAt: '2026-02-02T03:00:00.000Z', photoUrl: null, members: [{ userId: id('jimin'), status: 'confirmed' }] },
@@ -132,6 +132,16 @@ export function getDemoCompletedSlugs(): string[] {
 /** Guest-mode certifications live in memory for the session (spec §25 demo build). */
 export function addDemoSession(session: DemoSession): void {
   DEMO_SESSIONS.unshift(session);
+}
+
+/** Guest-mode invitation response; mirrors the DB trigger that completes a session. */
+export function respondToDemoInvitation(sessionId: string, userId: string, status: CertificationMemberStatus): DemoSession | null {
+  const session = DEMO_SESSIONS.find((s) => s.id === sessionId);
+  if (!session) return null;
+  const member = session.members.find((m) => m.userId === userId);
+  if (!member) return null;
+  member.status = status;
+  return session;
 }
 
 export const DEMO_FAVORITE_SLUGS = ['deogyusan', 'sobaeksan'] as const;

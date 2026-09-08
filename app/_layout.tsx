@@ -40,6 +40,9 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="certification/capture" />
         <Stack.Screen name="certification/review" />
         <Stack.Screen name="certification/success" />
+        <Stack.Screen name="certification/invite" />
+        <Stack.Screen name="certification/join" />
+        <Stack.Screen name="certification/session/[id]" />
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="(auth)" />

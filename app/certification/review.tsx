@@ -5,9 +5,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { AppText, EmptyState, PrimaryButton, Screen, SecondaryButton, TopBar } from '@/components/ui';
 import { colors, radii, spacing } from '@/constants';
-import { useAuth } from '@/features/auth';
-import { authErrorMessage } from '@/features/auth/messages';
-import { useCreateCertification, type CaptureDraft } from '@/features/certification';
+import type { CaptureDraft } from '@/features/certification';
 import { useMountain } from '@/features/mountains';
 import { formatDistance } from '@/lib/geo';
 
@@ -25,9 +23,7 @@ type Params = {
 export default function ReviewScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<Params>();
-  const { status: authStatus } = useAuth();
   const mountain = useMountain(params.mountainId);
-  const create = useCreateCertification();
 
   const draft: CaptureDraft | null =
     mountain.data && params.photoUri
@@ -43,15 +39,10 @@ export default function ReviewScreen() {
         }
       : null;
 
-  const handleSubmit = () => {
+  // Next: pick mutual friends (spec §6.3 step 3). Creating the session happens there.
+  const handleNext = () => {
     if (!draft) return;
-    create.mutate(draft, {
-      onSuccess: (result) =>
-        router.replace({
-          pathname: '/certification/success',
-          params: { sessionId: result.sessionId, mountainId: result.mountainId, newlyCollected: result.newlyCollected ? '1' : '0' },
-        }),
-    });
+    router.push({ pathname: '/certification/invite', params });
   };
 
   if (!draft || mountain.isError) {
@@ -96,14 +87,9 @@ export default function ReviewScreen() {
         정확한 위치 좌표는 공개되지 않아요. 친구에게는 산 이름과 날짜만 보여요.
       </AppText>
 
-      {create.isError ? (
-        <AppText variant="bodySmall" color="danger" style={styles.error}>
-          {authErrorMessage(create.error)}
-        </AppText>
-      ) : null}
-      <PrimaryButton label={authStatus === 'guest' ? '인증 완료하기 (둘러보기)' : '인증 완료하기'} onPress={handleSubmit} loading={create.isPending} />
+      <PrimaryButton label="다음: 친구 선택" onPress={handleNext} />
       <View style={styles.gap} />
-      <SecondaryButton label="다시 찍기" onPress={() => router.back()} disabled={create.isPending} />
+      <SecondaryButton label="다시 찍기" onPress={() => router.back()} />
     </Screen>
   );
 }
@@ -149,6 +135,5 @@ const styles = StyleSheet.create({
     gap: spacing.xxs,
   },
   note: { marginTop: spacing.md, marginBottom: spacing.xl },
-  error: { marginBottom: spacing.md },
   gap: { height: spacing.md },
 });

@@ -12,7 +12,8 @@
 - **Phase 2 — Mountains 완료.** 100대 명산 시드 데이터(`src/data/mountains.json` → `supabase/seed.sql`), 명산 도감 그리드(필터·검색·수집 상태), 산 상세(히어로·마스코트·즐겨찾기·소개/인증자 탭·인증 CTA), 홈·MY의 진행도 연동, 산별 SVG 마스코트 시스템.
 - **Phase 4 — Certification 완료.** 위치 권한·정상 반경 검증(Haversine), 앱 내 카메라 촬영, 사진 업로드(Storage `certifications` 버킷), 인증 세션 생성 + 생성자 확정, 캐릭터 공개 완료 화면, DB 트리거로 반경 서버 재검증. 게스트 모드에서는 세션이 메모리에만 저장됩니다.
 - **Phase 3 — Social 완료.** 프로필(팔로워·팔로잉·산 수, 산 기록, 모은 캐릭터), 팔로우/언팔로우, 맞팔 계산, 친구 탭(맞팔·팔로잉·팔로워·검색), 산 상세 인증자 목록(맞팔 친구가 항상 위, 각 그룹 최신순, 공동 인증 "N명 함께" 표시).
-- 공동 인증(맞팔 친구 초대·수락·참여자 GPS 검증)은 아직 없습니다. 다음 단계는 마스터 스펙 19장의 **Phase 5 — Shared certification**입니다.
+- **Phase 5 — Shared certification 완료.** 촬영 후 맞팔 친구 선택(`certification/invite`), 초대 발송 화면, 홈·인증 탭의 초대 카드, 초대 수락/거절(`certification/join`, 수락은 정상 반경 안에서만), 세션 현황·완료 화면(`certification/session/[id]`), 24시간 만료. 세션 상태 전이와 만료는 DB 트리거가 담당합니다(`0004_shared_certification.sql`).
+- 다음 단계는 마스터 스펙 19장의 **Phase 6 — Polish**(캐릭터 공개 애니메이션, 스켈레톤·빈 상태 정리, 햅틱, 마이크로 인터랙션, 접근성 점검)입니다.
 - 이전에 있던 레거시 프로젝트(MountainBot)는 모두 제거되었습니다.
 
 ## 시작하기
@@ -94,6 +95,7 @@ docs/references/     비주얼 레퍼런스 3장 + 매니페스트
 - 공식 아트가 없는 산(93개)은 도감·상세·프로필에서 공통 잠금 플레이스홀더(guide 실루엣 + 물음표, "캐릭터 준비 중")를 씁니다. 새 캐릭터를 자동 생성하지 않습니다. `Mascot.tsx`의 procedural SVG는 `image`가 없는 룩에서만 도는 임시 fallback이며 현재 화면에서는 사용되지 않습니다.
 - 크기 기준(`OFFICIAL_ART.boxFor(visible)`): 홈 가이드 약 200pt, 도감 카드 약 100pt, 산 상세 약 170pt, 프로필 60~80pt. PNG는 가로 72%가 캐릭터이고 아래 17%가 여백이라 이 비율로 박스를 계산합니다.
 - 새 공식 캐릭터 추가: PNG를 `assets/mascots/<mascot_key>.png`로 넣고 `src/data/mascots.ts`의 `CURATED`에 `image: require(...)` 항목을 추가하면 됩니다.
+- `assets/official/`의 파일은 앱 코드에서 참조하지 않습니다. 그중 `b.Take a Hike_Character_*.PNG`는 레퍼런스 01·02에 등장하는 원작 프로그램 캐릭터라 스펙 §0.1 5항(원작 캐릭터 복제 금지)에 따라 사용할 수 없습니다.
 
 ## 예정 기술 스택
 
