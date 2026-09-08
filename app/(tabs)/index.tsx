@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import {
   AppText,
   Avatar,
+  CollectionSwitcher,
   InvitationCard,
   LoadingSkeleton,
   MountainCard,
@@ -21,12 +22,16 @@ import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
 import { HOME_HERO_CHARACTER, OFFICIAL_STICKERS } from '@/data/officialArt';
 import { useAuth } from '@/features/auth';
 import { useMyInvitations, useRespondToInvitation } from '@/features/certification';
+import {
+  BAC_PENDING_COUNT,
+  completedCountForCollection,
+  mountainsForCollection,
+  usePrimaryCollection,
+} from '@/features/collections';
 import { useCompletedMountainIds, useMountains } from '@/features/mountains';
-import { TOTAL_MOUNTAINS } from '@/types';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
-/** Four one-tap quick actions — spec §4.1, subtitles per the UI concept. */
 const QUICK_ACTIONS: { label: string; sub: string; icon: IconName; href: Href; tone: string }[] = [
   { label: '명산 도감', sub: '100대 명산', icon: 'image-filter-hdr', href: '/mountains', tone: colors.green },
   { label: '인증하기', sub: '지금 여기서!', icon: 'camera', href: '/verify', tone: colors.red },
@@ -41,22 +46,32 @@ export default function HomeScreen() {
   const completedQuery = useCompletedMountainIds();
   const invitations = useMyInvitations();
   const respond = useRespondToInvitation();
+  const { id: collectionId, collection } = usePrimaryCollection();
 
   const completed = useMemo(() => completedQuery.data ?? new Set<string>(), [completedQuery.data]);
-  const count = completed.size;
-  const remaining = TOTAL_MOUNTAINS - count;
+  const collectionMountains = useMemo(
+    () => mountainsForCollection(mountains.data ?? [], collectionId),
+    [mountains.data, collectionId],
+  );
+  const count = useMemo(
+    () => completedCountForCollection(mountains.data ?? [], completed, collectionId),
+    [mountains.data, completed, collectionId],
+  );
+  const remaining = collection.targetCount - count;
 
   const displayName =
     (user?.user_metadata as { display_name?: string } | undefined)?.display_name ??
     (status === 'guest' ? '게스트' : null);
 
-  // Hero shows the most recently featured collected mountain, else the next target.
-  const hero = useMemo(() => {
-    const list = mountains.data ?? [];
-    return list.find((m) => completed.has(m.id)) ?? list[0] ?? null;
-  }, [mountains.data, completed]);
+  const hero = useMemo(
+    () => collectionMountains.find((m) => completed.has(m.id)) ?? collectionMountains[0] ?? null,
+    [collectionMountains, completed],
+  );
 
-  const nextTargets = useMemo(() => (mountains.data ?? []).filter((m) => !completed.has(m.id)).slice(0, 2), [mountains.data, completed]);
+  const nextTargets = useMemo(
+    () => collectionMountains.filter((m) => !completed.has(m.id)).slice(0, 2),
+    [collectionMountains, completed],
+  );
 
   const bubble = count === 0 ? '첫 산은 어디로 갈 건데?' : `아직 ${remaining}개나 남았는데?`;
 
@@ -88,15 +103,24 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
+      <View style={styles.challenge}>
+        <CollectionSwitcher showDescription />
+      </View>
+
       <View style={styles.progressWrap}>
-        <AppText variant="caption" weight="700" color="inkMuted">MY 100 PEAKS</AppText>
+        <AppText variant="caption" weight="700" color="inkMuted">{collection.name.toUpperCase()}</AppText>
         <View style={styles.progress}>
-          {completedQuery.isLoading ? (
+          {completedQuery.isLoading || mountains.isLoading ? (
             <LoadingSkeleton height={52} width="45%" />
           ) : (
             <ProgressCounter completed={count} />
           )}
         </View>
+        {collectionId === 'bac_100' ? (
+          <AppText variant="caption" color="inkMuted">
+            BAC 전용 {BAC_PENDING_COUNT}개 산은 인증지 좌표 검증 후 순차 연결돼요. 기존 등산 기록은 자동 반영돼요.
+          </AppText>
+        ) : null}
       </View>
 
       <View style={styles.hero}>
@@ -107,9 +131,7 @@ export default function HomeScreen() {
           style={styles.heroPhoto}
           accessibilityLabel={hero ? `${hero.name_ko} 사진` : '산 사진'}
         />
-
         <View style={styles.heroScrim} pointerEvents="none" />
-
         {hero ? (
           <Pressable
             onPress={() => router.push({ pathname: '/mountain/[id]', params: { id: hero.id } })}
@@ -122,25 +144,11 @@ export default function HomeScreen() {
             </AppText>
           </Pressable>
         ) : null}
-
-        <Image
-          source={OFFICIAL_STICKERS.mountain}
-          contentFit="contain"
-          style={styles.mountainSticker}
-          accessibilityLabel="산 그래픽 스티커"
-        />
-
+        <Image source={OFFICIAL_STICKERS.mountain} contentFit="contain" style={styles.mountainSticker} accessibilityLabel="산 그래픽 스티커" />
         <View style={styles.bubble} pointerEvents="none">
           <SpeechBubble text={bubble} tone="surface" tailPosition="left" />
         </View>
-
-        <Image
-          source={HOME_HERO_CHARACTER}
-          contentFit="contain"
-          style={styles.heroCharacter}
-          accessibilityLabel="100PEAKS 공식 캐릭터"
-        />
-
+        <Image source={HOME_HERO_CHARACTER} contentFit="contain" style={styles.heroCharacter} accessibilityLabel="100PEAKS 공식 캐릭터" />
         <View style={styles.sign} pointerEvents="none">
           <SignPost lines={['산은 왜 하는 건데?', '— 그냥 좋으니까!']} tilt={-2} />
         </View>
@@ -157,9 +165,7 @@ export default function HomeScreen() {
           >
             <MaterialCommunityIcons name={action.icon} size={38} color={action.tone} style={styles.actionIcon} />
             <AppText variant="heading3">{action.label}</AppText>
-            <AppText variant="caption" color="inkMuted">
-              {action.sub}
-            </AppText>
+            <AppText variant="caption" color="inkMuted">{action.sub}</AppText>
           </Pressable>
         ))}
       </View>
@@ -169,9 +175,7 @@ export default function HomeScreen() {
           <View style={styles.sectionHead}>
             <AppText variant="heading2">이번엔 어디 갈 건데?</AppText>
             <Pressable onPress={() => router.push('/mountains')} accessibilityRole="button" accessibilityLabel="도감 전체 보기" hitSlop={8}>
-              <AppText variant="bodySmall" weight="700" color="blue">
-                전체 보기
-              </AppText>
+              <AppText variant="bodySmall" weight="700" color="blue">전체 보기</AppText>
             </Pressable>
           </View>
           <View style={styles.targets}>
@@ -194,59 +198,19 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   invitations: { marginTop: spacing.sm, marginBottom: spacing.lg, gap: spacing.md },
-  progressWrap: { marginTop: spacing.md, gap: spacing.xxs },
+  challenge: { marginTop: spacing.md },
+  progressWrap: { marginTop: spacing.lg, gap: spacing.xxs },
   progress: { marginTop: 2 },
   hero: { marginTop: spacing.lg, marginBottom: spacing.huge + spacing.xl, minHeight: 410 },
   heroPhoto: { height: 390 },
-  heroScrim: {
-    ...StyleSheet.absoluteFillObject,
-    bottom: 20,
-    borderRadius: radii.cardLarge,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  heroTag: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    backgroundColor: colors.ink,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minHeight: 32,
-    justifyContent: 'center',
-  },
-  mountainSticker: {
-    position: 'absolute',
-    width: 78,
-    height: 78,
-    left: spacing.md,
-    top: spacing.md,
-    transform: [{ rotate: '-7deg' }],
-  },
+  heroScrim: { ...StyleSheet.absoluteFillObject, bottom: 20, borderRadius: radii.cardLarge, backgroundColor: 'rgba(0,0,0,0.05)' },
+  heroTag: { position: 'absolute', top: spacing.md, right: spacing.md, backgroundColor: colors.ink, borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, minHeight: 32, justifyContent: 'center' },
+  mountainSticker: { position: 'absolute', width: 78, height: 78, left: spacing.md, top: spacing.md, transform: [{ rotate: '-7deg' }] },
   bubble: { position: 'absolute', right: spacing.md, top: 72, maxWidth: 190 },
-  heroCharacter: {
-    position: 'absolute',
-    width: 250,
-    height: 300,
-    left: -20,
-    bottom: -54,
-  },
+  heroCharacter: { position: 'absolute', width: 250, height: 300, left: -20, bottom: -54 },
   sign: { position: 'absolute', right: spacing.sm, bottom: -spacing.huge },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.md },
-  action: {
-    width: '47%',
-    flexGrow: 1,
-    minHeight: MIN_TOUCH_TARGET + 64,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radii.cardLarge,
-    padding: spacing.lg,
-    gap: spacing.xxs,
-    transform: [{ rotate: '-0.4deg' }],
-  },
+  action: { width: '47%', flexGrow: 1, minHeight: MIN_TOUCH_TARGET + 64, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, borderRadius: radii.cardLarge, padding: spacing.lg, gap: spacing.xxs, transform: [{ rotate: '-0.4deg' }] },
   actionPressed: { backgroundColor: colors.surfaceMuted, transform: [{ rotate: '0deg' }, { scale: 0.99 }] },
   actionIcon: { marginBottom: spacing.xs },
   section: { marginTop: spacing.xxxl },
