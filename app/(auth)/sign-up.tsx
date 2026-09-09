@@ -72,7 +72,8 @@ export default function SignUpScreen() {
           placeholder="영문 소문자, 숫자, 밑줄 3~20자"
           autoCapitalize="none"
           autoCorrect={false}
-          autoComplete="username"
+          autoComplete={Platform.OS === 'ios' ? undefined : 'off'}
+          textContentType={Platform.OS === 'ios' ? 'none' : undefined}
           error={errors.username}
         />
         <TextField
@@ -89,9 +90,9 @@ export default function SignUpScreen() {
           onChangeText={setEmail}
           placeholder="hello@example.com"
           autoCapitalize="none"
-          autoComplete="email"
+          autoComplete={Platform.OS === 'ios' ? undefined : 'username'}
           keyboardType="email-address"
-          textContentType="emailAddress"
+          textContentType={Platform.OS === 'ios' ? 'username' : undefined}
           error={errors.email}
         />
         <TextField
@@ -100,8 +101,8 @@ export default function SignUpScreen() {
           onChangeText={setPassword}
           placeholder="8자 이상"
           secureTextEntry
-          autoComplete="new-password"
-          textContentType="newPassword"
+          autoComplete={Platform.OS === 'ios' ? undefined : 'new-password'}
+          textContentType={Platform.OS === 'ios' ? 'newPassword' : undefined}
           error={errors.password}
           onSubmitEditing={handleSubmit}
           returnKeyType="done"

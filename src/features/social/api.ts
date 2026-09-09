@@ -3,7 +3,15 @@ import { LOCAL_MOUNTAINS } from '@/features/mountains/api';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import type { Profile } from '@/types';
 
-import type { CertifiedUser, CertifiedUsers, CompletedMountain, FollowSets, ProfileStats } from './types';
+import type {
+  CertifiedUser,
+  CertifiedUsers,
+  CompletedMountain,
+  FollowSets,
+  MountainCertificationRecord,
+  ProfileStats,
+  UpdateProfileInput,
+} from './types';
 
 const remote = () => isSupabaseConfigured;
 
@@ -45,11 +53,28 @@ function demoCompletedMountains(userId: string): CompletedMountain[] {
         mountainId,
         certifiedAt: s.capturedAt,
         sessionId: s.id,
+        photoUrl: s.photoUrl,
         partySize: s.members.filter((m) => m.status === 'confirmed').length,
       });
     }
   }
   return [...byMountain.values()].sort((a, b) => b.certifiedAt.localeCompare(a.certifiedAt));
+}
+
+function demoMountainCertificationHistory(userId: string, mountainId: string): MountainCertificationRecord[] {
+  const slug = LOCAL_MOUNTAINS.find((mountain) => mountain.id === mountainId)?.slug;
+  if (!slug) return [];
+
+  return DEMO_SESSIONS.flatMap((session) => {
+    const confirmed = session.members.some((member) => member.userId === userId && member.status === 'confirmed');
+    if (session.mountainSlug !== slug || !confirmed) return [];
+    return [{
+      sessionId: session.id,
+      certifiedAt: session.capturedAt,
+      photoUrl: session.photoUrl,
+      partySize: session.members.filter((member) => member.status === 'confirmed').length,
+    }];
+  }).sort((a, b) => b.certifiedAt.localeCompare(a.certifiedAt));
 }
 
 // ---------------------------------------------------------------------------
@@ -61,6 +86,117 @@ export async function fetchProfile(id: string): Promise<Profile | null> {
   const { data, error } = await getSupabase().from('profiles').select('*').eq('id', id).maybeSingle();
   if (error) throw error;
   return (data as Profile | null) ?? null;
+}
+
+const PROFILE_MEDIA_BUCKET = 'profile-media';
+
+function mediaExtension(mimeType: string | null): string {
+  if (mimeType === 'image/png') return 'png';
+  if (mimeType === 'image/webp') return 'webp';
+  if (mimeType === 'image/heic') return 'heic';
+  if (mimeType === 'image/heif') return 'heif';
+  return 'jpg';
+}
+
+async function uploadProfileMedia(
+  userId: string,
+  kind: 'avatar' | 'home-background',
+  uri: string,
+  mimeType: string | null,
+): Promise<{ url: string; path: string }> {
+  const supabase = getSupabase();
+  const response = await fetch(uri);
+  const body = await response.arrayBuffer();
+  const path = `${userId}/${kind}-${Date.now()}.${mediaExtension(mimeType)}`;
+  const { error } = await supabase.storage.from(PROFILE_MEDIA_BUCKET).upload(path, body, {
+    contentType: mimeType ?? 'image/jpeg',
+    upsert: false,
+  });
+  if (error) throw error;
+  return { path, url: supabase.storage.from(PROFILE_MEDIA_BUCKET).getPublicUrl(path).data.publicUrl };
+}
+
+function ownedProfileMediaPath(url: string | null, userId: string): string | null {
+  if (!url) return null;
+  const marker = `/storage/v1/object/public/${PROFILE_MEDIA_BUCKET}/`;
+  const encodedPath = url.split(marker)[1]?.split('?')[0];
+  if (!encodedPath) return null;
+  const path = decodeURIComponent(encodedPath);
+  return path.startsWith(`${userId}/`) ? path : null;
+}
+
+async function removeProfileMedia(paths: (string | null)[]): Promise<void> {
+  const ownedPaths = paths.filter((path): path is string => Boolean(path));
+  if (ownedPaths.length === 0) return;
+  try {
+    await getSupabase().storage.from(PROFILE_MEDIA_BUCKET).remove(ownedPaths);
+  } catch {
+    // A best-effort cleanup must never invalidate a profile update that already succeeded.
+  }
+}
+
+/** Update only the signed-in user's editable profile fields and owned media. */
+export async function updateProfile(userId: string, input: UpdateProfileInput): Promise<Profile> {
+  const username = input.username.trim().toLowerCase();
+  const displayName = input.displayName.trim();
+  const bio = input.bio.trim() || null;
+
+  if (!remote() || userId.startsWith('demo:')) {
+    const current = demoProfile(userId);
+    if (!current) throw new Error('프로필을 찾을 수 없어요.');
+    Object.assign(current, {
+      username,
+      display_name: displayName,
+      bio,
+      avatar_url: input.avatar === undefined ? current.avatar_url : input.avatar?.uri ?? null,
+      home_background_url:
+        input.homeBackground === undefined ? current.home_background_url : input.homeBackground?.uri ?? null,
+    });
+    return { ...current };
+  }
+
+  const current = await fetchProfile(userId);
+  if (!current) throw new Error('프로필을 찾을 수 없어요.');
+
+  const uploadedPaths: string[] = [];
+  try {
+    const avatarUpload = input.avatar
+      ? await uploadProfileMedia(userId, 'avatar', input.avatar.uri, input.avatar.mimeType)
+      : null;
+    if (avatarUpload) uploadedPaths.push(avatarUpload.path);
+
+    const backgroundUpload = input.homeBackground
+      ? await uploadProfileMedia(userId, 'home-background', input.homeBackground.uri, input.homeBackground.mimeType)
+      : null;
+    if (backgroundUpload) uploadedPaths.push(backgroundUpload.path);
+
+    const avatarUrl = input.avatar === undefined ? current.avatar_url : avatarUpload?.url ?? null;
+    const homeBackgroundUrl =
+      input.homeBackground === undefined ? current.home_background_url : backgroundUpload?.url ?? null;
+
+    const { data, error } = await getSupabase()
+      .from('profiles')
+      .update({
+        username,
+        display_name: displayName,
+        bio,
+        avatar_url: avatarUrl,
+        home_background_url: homeBackgroundUrl,
+      })
+      .eq('id', userId)
+      .select('*')
+      .single();
+    if (error) throw error;
+
+    await removeProfileMedia([
+      input.avatar === undefined ? null : ownedProfileMediaPath(current.avatar_url, userId),
+      input.homeBackground === undefined ? null : ownedProfileMediaPath(current.home_background_url, userId),
+    ]);
+    return data as Profile;
+  } catch (error) {
+    await removeProfileMedia(uploadedPaths);
+    throw error;
+  }
 }
 
 export async function searchProfiles(term: string, viewerId: string): Promise<Profile[]> {
@@ -219,12 +355,14 @@ export async function fetchCompletedMountains(userId: string): Promise<Completed
 
   const { data, error } = await getSupabase()
     .from('certification_members')
-    .select('certification_sessions!inner(id, mountain_id, captured_at)')
+    .select('certification_sessions!inner(id, mountain_id, captured_at, photo_url)')
     .eq('user_id', userId)
     .eq('status', 'confirmed');
   if (error) throw error;
 
-  const rows = (data ?? []) as unknown as { certification_sessions: { id: string; mountain_id: string; captured_at: string } | null }[];
+  const rows = (data ?? []) as unknown as {
+    certification_sessions: { id: string; mountain_id: string; captured_at: string; photo_url: string | null } | null;
+  }[];
   const sessionIds = rows.map((r) => r.certification_sessions?.id).filter((v): v is string => !!v);
   const partySizes = await fetchPartySizes(sessionIds);
 
@@ -238,11 +376,47 @@ export async function fetchCompletedMountains(userId: string): Promise<Completed
         mountainId: s.mountain_id,
         certifiedAt: s.captured_at,
         sessionId: s.id,
+        photoUrl: s.photo_url,
         partySize: partySizes.get(s.id) ?? 1,
       });
     }
   }
   return [...byMountain.values()].sort((a, b) => b.certifiedAt.localeCompare(a.certifiedAt));
+}
+
+/** Every confirmed visit by this user to one mountain, newest first. */
+export async function fetchMountainCertificationHistory(
+  userId: string,
+  mountainId: string,
+): Promise<MountainCertificationRecord[]> {
+  if (!remote() || userId.startsWith('demo:') || mountainId.startsWith('local:')) {
+    return demoMountainCertificationHistory(userId, mountainId);
+  }
+
+  const { data, error } = await getSupabase()
+    .from('certification_members')
+    .select('certification_sessions!inner(id, mountain_id, captured_at, photo_url)')
+    .eq('user_id', userId)
+    .eq('status', 'confirmed')
+    .eq('certification_sessions.mountain_id', mountainId);
+  if (error) throw error;
+
+  const sessions = (data ?? []).flatMap((row) => {
+    const session = (row as unknown as {
+      certification_sessions: { id: string; captured_at: string; photo_url: string | null } | null;
+    }).certification_sessions;
+    return session ? [session] : [];
+  });
+  const partySizes = await fetchPartySizes(sessions.map((session) => session.id));
+
+  return sessions
+    .map((session) => ({
+      sessionId: session.id,
+      certifiedAt: session.captured_at,
+      photoUrl: session.photo_url,
+      partySize: partySizes.get(session.id) ?? 1,
+    }))
+    .sort((a, b) => b.certifiedAt.localeCompare(a.certifiedAt));
 }
 
 export async function fetchProfileStats(userId: string): Promise<ProfileStats> {

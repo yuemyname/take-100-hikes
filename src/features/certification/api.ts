@@ -1,5 +1,5 @@
 import { addDemoSession, DEMO_ME_ID, DEMO_PROFILES, DEMO_SESSIONS, respondToDemoInvitation } from '@/data/demo';
-import { LOCAL_MOUNTAINS } from '@/features/mountains/api';
+import { hasVerificationCoordinates, LOCAL_MOUNTAINS } from '@/features/mountains/api';
 import { fetchFollowSets } from '@/features/social/api';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import type { CertificationMember, CertificationMemberStatus, CertificationSession, Mountain, Profile } from '@/types';
@@ -123,6 +123,7 @@ async function hasCompleted(userId: string, mountainId: string): Promise<boolean
 async function createDemoCertification(draft: CaptureDraft, inviteeIds: string[]): Promise<CreatedCertification> {
   const mountain = LOCAL_MOUNTAINS.find((m) => m.id === draft.mountainId);
   if (!mountain) throw new Error('도감에 없는 산이에요.');
+  if (!hasVerificationCoordinates(mountain)) throw new Error('인증지 좌표 검증이 끝난 산만 인증할 수 있어요.');
   const sets = await fetchFollowSets(DEMO_ME_ID);
   const invitees = [...new Set(inviteeIds)].filter((id) => id !== DEMO_ME_ID && sets.mutual.has(id));
   const alreadyCollected = DEMO_SESSIONS.some(
@@ -309,6 +310,7 @@ export async function respondToInvitation(response: InvitationResponse, viewerId
     const me = detail.members.find((m) => m.user.id === viewerId);
     if (!me || me.status !== 'invited') throw new Error('이미 처리됐거나 만료된 요청이에요.');
     if (response.accept && response.position) {
+      if (!hasVerificationCoordinates(detail.mountain)) throw new Error('인증지 좌표 검증이 끝난 산만 인증할 수 있어요.');
       const { getDistanceMeters } = await import('@/lib/geo');
       const d = getDistanceMeters(response.position, detail.mountain);
       if (d > detail.mountain.verification_radius_m + Math.min(response.position.accuracyM ?? 0, 50)) {

@@ -18,7 +18,7 @@ export interface TopBarProps {
 export function TopBar({ title, wordmark = false, onBack, right }: TopBarProps) {
   return (
     <View style={styles.row}>
-      <View style={styles.side}>
+      <View style={[styles.side, wordmark && !onBack ? styles.wordmarkSpacer : null]}>
         {onBack ? (
           <Pressable
             onPress={onBack}
@@ -32,9 +32,9 @@ export function TopBar({ title, wordmark = false, onBack, right }: TopBarProps) 
         ) : null}
       </View>
 
-      <View style={styles.center}>
+      <View style={[styles.center, wordmark ? styles.wordmarkCenter : null]}>
         {wordmark ? (
-          <Wordmark size={22} />
+          <Wordmark size={32} />
         ) : title ? (
           <AppText variant="heading3" accessibilityRole="header" numberOfLines={1}>
             {title}
@@ -55,8 +55,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   side: { width: MIN_TOUCH_TARGET, justifyContent: 'center' },
+  wordmarkSpacer: { width: 0 },
   sideRight: { alignItems: 'flex-end' },
   center: { flex: 1, alignItems: 'center' },
+  wordmarkCenter: { alignItems: 'flex-start' },
   iconButton: {
     width: MIN_TOUCH_TARGET,
     height: MIN_TOUCH_TARGET,

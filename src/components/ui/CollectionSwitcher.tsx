@@ -32,9 +32,17 @@ export function CollectionSwitcher({ compact = false, showDescription = false }:
               accessibilityRole="tab"
               accessibilityState={{ selected, disabled: isSaving }}
               accessibilityLabel={`${item.name}로 보기`}
-              style={[styles.option, compact ? styles.optionCompact : null, selected ? styles.selected : null]}
+              style={({ pressed }) => [
+                styles.option,
+                compact ? styles.optionCompact : null,
+                selected ? styles.selected : null,
+                pressed ? styles.pressed : null,
+              ]}
             >
-              <AppText variant={compact ? 'caption' : 'bodySmall'} weight="700" color={selected ? 'surface' : 'ink'}>
+              <View style={[styles.radio, selected ? styles.radioSelected : null]}>
+                {selected ? <View style={styles.radioDot} /> : null}
+              </View>
+              <AppText variant={compact ? 'caption' : 'bodySmall'} weight="700">
                 {item.shortName}
               </AppText>
             </Pressable>
@@ -65,12 +73,28 @@ const styles = StyleSheet.create({
   option: {
     flex: 1,
     minHeight: 44,
+    flexDirection: 'row',
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radii.pill,
+    borderWidth: 2,
+    borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  optionCompact: { flex: 0, minHeight: 36, paddingHorizontal: spacing.md },
-  selected: { backgroundColor: colors.ink },
+  optionCompact: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto', minHeight: 44 },
+  selected: { backgroundColor: colors.surface, borderColor: colors.ink },
+  pressed: { opacity: 0.7 },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: colors.inkMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioSelected: { borderColor: colors.ink },
+  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.ink },
   description: { paddingHorizontal: spacing.xs },
 });

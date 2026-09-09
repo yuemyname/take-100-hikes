@@ -63,7 +63,9 @@ export const OFFICIAL_STICKERS = {
 } as const;
 
 /** Shared recurring actors by screen context. These are roles, not mountain identities. */
-export const HOME_HERO_CHARACTER = OFFICIAL_CHARACTERS.yellow[0];
+export const HOME_HERO_CHARACTER = OFFICIAL_CHARACTERS.yellow[3];
+export const HOME_HERO_LABEL = OFFICIAL_STICKERS.thisIsWhyIHike;
 export const MOUNTAIN_DETAIL_CHARACTER = OFFICIAL_CHARACTERS.blue[1];
 export const CERTIFICATION_SUCCESS_CHARACTER = OFFICIAL_CHARACTERS.red[0];
+export const EMPTY_STATE_CHARACTER = OFFICIAL_CHARACTERS.yellow[2];
 export const SOCIAL_CHARACTER = OFFICIAL_CHARACTERS.pink[0];

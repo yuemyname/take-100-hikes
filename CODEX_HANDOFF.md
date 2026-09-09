@@ -27,7 +27,7 @@
 4. `docs/COLLECTIONS.md` — 최신 다중 컬렉션 모델; 단일 100대 명산을 가정하는 오래된 문구보다 우선
 5. `docs/data/BAC100_DATA_POLICY.md`
 6. `docs/data/bac100-candidates.csv` — BAC 후보 100개, 인증지명, 산림청 대응 관계, 좌표 검증 상태
-7. `supabase/migrations/0001_init.sql`부터 `0006_seed_forest_collection.sql`까지 순서대로
+7. `supabase/migrations/0001_init.sql`부터 최신 마이그레이션까지 순서대로
 8. `src/features/collections/index.ts`, `src/types/database.ts`, `src/features/certification/`, `src/features/mountains/`
 9. UI 작업이면 `docs/references/README.md`와 `docs/references/`의 이미지 3개를 실제로 확인하고, `assets/official/` 및 `src/data/officialArt.ts`도 확인한다.
 
@@ -71,10 +71,28 @@
 - 앱 타입에 `Collection`, `CollectionMountain`, `VerificationPoint`, `CollectionId`가 추가되어 있다.
 - 첫 방문 시 대표 컬렉션 선택 안내가 나오며, 선택값은 현재 AsyncStorage의 `100peaks.primaryCollection`에 저장된다.
 - 홈과 명산 도감에서 대표 컬렉션을 전환할 수 있다.
-- 홈은 선택한 컬렉션 기준 `X / 100`, 추천 산, 남은 산 수를 보여준다.
+- 홈은 선택한 컬렉션 기준 인증 산 수와 `🏔️`, 추천 산, 남은 산 수를 보여준다.
 - 명산 도감은 선택한 컬렉션으로 목록·검색·필터·완료 수를 바꾼다.
 - MY는 대표 컬렉션을 크게 표시하고 산림청/BAC 진행률을 동시에 표시한다.
 - 컬렉션 전환은 인증 레코드를 수정·삭제·복제하지 않는다.
+
+### 2026-09-09 데이터·원격 DB 반영
+
+- BAC 산 정체성 감사와 BAC 전용 대상 반영 후, 산림청 목록에서 빠져 있던 홍도 `깃대봉`을 공식 산림청 자료로 확인해 추가했다.
+- 현재 산 정체성은 합계 121개이며 두 컬렉션은 각각 100개, 교집합 79개, 각 차집합 21개다.
+- `0008_complete_collection_memberships.sql`과 `supabase/seed.sql`이 명시적 slug로 200개 멤버십을 구성하고 서버에서 최종 개수를 검증한다.
+- 연결된 `100hikes` Supabase 프로젝트에 `0001`–`0008`과 seed를 적용했다. 적용 직후 원격 통계는 `mountains=121`, `collections=2`, `collection_mountains=200`이다.
+- BAC 100개 인증지 좌표는 여전히 검증되지 않았다. `verification_points`는 비어 있고, BAC 전용 21개 및 깃대봉의 레거시 GPS 필드는 `null`이다.
+
+### 2026-09-09 인증 사진·프로필 편집 반영
+
+- 사용자의 산별 최신 확정 인증 세션 `photo_url`이 명산 도감 썸네일, 산 상세 히어로, MY 인증 기록 사진에 표시된다. 전역 `mountains.image_url`은 변경하지 않는다.
+- MY의 `프로필 · 홈 배경 수정`에서 아이디, 표시 이름, 소개, 프로필 사진, 개인 홈 산 배경을 수정할 수 있다.
+- `0010_profile_media.sql`이 `profiles.home_background_url`과 공개 읽기/소유자 전용 쓰기 정책을 가진 `profile-media` Storage 버킷을 추가한다.
+- 이미지 선택은 Expo SDK 호환 `expo-image-picker`를 사용한다.
+- 홈 상단 진행 표시는 `X / 100` 대신 `X 🏔️`이며, 프로필 사진과 개인 홈 배경을 즉시 반영한다.
+- `0009_backfill_auth_profiles.sql`과 `0010_profile_media.sql`은 연결된 원격 Supabase에 적용됐고, 최종 dry-run에서 원격 DB가 최신 상태임을 확인했다.
+- 개발 빌드의 인증 촬영 및 공동 인증 참여 화면에는 로그인 상태에서도 보이는 정상 위치 보정 토글이 있다. 저장된 검증 좌표가 있는 산만 사용하고 Release 빌드에서는 숨긴다.
 
 ## 4. 두 컬렉션의 불변 아키텍처
 
@@ -132,11 +150,11 @@ certification_sessions + certification_members
 - 산림청 데이터와 대응 가능한 대상은 79개다.
 - BAC에만 있는 대상은 21개이고, 산림청에만 있는 대상도 21개다.
 - 클라이언트의 `src/features/collections/index.ts`에는 BAC 100 이름 집합이 있고, 기존 산림청 데이터와 이름을 맞춰 79개를 임시로 BAC 도감에 보여준다.
-- `BAC_CONNECTED_COUNT = 79`, `BAC_PENDING_COUNT = 21`이 현재 UI 안내에 사용된다.
-- **DB에는 아직 `bac_100`의 `collection_mountains` 멤버십이 시드되지 않았다.**
+- `BAC_CONNECTED_COUNT = 100`, `BAC_PENDING_COUNT = 21`이 현재 UI 안내에 사용된다.
+- DB의 `bac_100` `collection_mountains` 멤버십은 명시적 slug 매핑으로 100개가 시드되어 있다.
 - **DB에는 아직 BAC `verification_points`가 시드되지 않았다.**
-- **BAC 전용 21개는 아직 `mountains`의 정식 레코드가 아니다.**
-- 따라서 BAC 화면 전환이 구현되었다고 해서 BAC 100/100 데이터와 GPS 인증이 완료된 것은 아니다.
+- BAC 전용 21개 도전 대상은 정식 산 정체성으로 연결되어 있다. 기존 오서산 정체성은 재사용하고 나머지 BAC 전용 산을 추가했다.
+- 따라서 BAC 목록 100개와 DB 멤버십은 완료됐지만, GPS 인증은 인증지 시드·좌표 검증 전까지 완료된 것이 아니다.
 
 ### BAC 전용 21개
 
@@ -167,7 +185,7 @@ certification_sessions + certification_members
 ### 아직 남은 구조적 연결
 
 - `profiles.primary_collection_id`는 DB에 있으나 현재 앱 선택값은 로컬 AsyncStorage에만 저장된다.
-- 최종 컬렉션 목록·순서는 DB 멤버십이 아니라 클라이언트 이름 매칭에 의존한다.
+- DB에는 최종 컬렉션 목록·순서가 있지만 클라이언트는 아직 임시 이름 매칭에 의존한다.
 - 인증 화면, 초대 수락 화면, 서버 반경 트리거는 `verification_points`가 아닌 기존 `mountains` 좌표를 사용한다.
 - 한 산이 컬렉션마다 다른 인증지를 요구할 때 어느 인증지로 시작하고 어떤 컬렉션에 인정할지 세션 계약을 명시하고 구현해야 한다. 필요한 경우 `certification_sessions.verification_point_id` 같은 최소 스키마 확장을 검토하되, 먼저 기존 세션 호환성과 진행률 파생 규칙을 설계한다.
 
@@ -219,21 +237,23 @@ certification_sessions + certification_members
 
 기존 Phase 1–5를 다시 만들지 않는다. 현재 가장 먼저 막힌 것은 BAC 100의 안전한 데이터 완성 및 새 인증지 모델 연결이다.
 
-### 1) BAC 100 원본 목록과 산 정체성 잠금
+2026-09-09 기준으로 1–3번은 완료됐다. 다음 구현은 4번부터 시작한다.
+
+### 1) BAC 100 원본 목록과 산 정체성 잠금 — 완료
 
 - `docs/data/bac100-candidates.csv`의 100개 순서, 산 이름, 지역, 인증지명을 현재 신뢰 가능한 BAC/지도/공공 자료와 대조한다.
 - 79개 대응 관계와 BAC 전용 21개를 다시 확인한다.
 - 동명이산과 여러 봉우리 사례를 문자열 정규화가 아니라 지역·대표봉·출처로 확정한다.
 - 확인한 출처와 확인일을 데이터 또는 마이그레이션 주석에 남긴다.
 
-### 2) BAC 전용 21개를 정식 `mountains` 데이터로 추가
+### 2) BAC 전용 21개를 정식 `mountains` 데이터로 추가 — 완료
 
 - 안정적인 UUID/slug, 한글명, 영문명, 고도, 지역, 설명, 표시용 메타데이터를 추가한다.
 - 기존 산과 중복 레코드를 만들지 않는다. 지리산 바래봉/반야봉처럼 제품상 별도 도전 대상인 경우에는 그 이유를 명시한다.
 - 현재 `mountains.latitude/longitude`가 `NOT NULL`이고 인증에도 재사용되는 기술 부채를 먼저 처리한다. 표시용 대표 좌표와 인증용 좌표를 혼동하지 말고, 검증되지 않은 인증 좌표로 제약을 억지로 채우지 않는다.
 - `src/data/mountains.json`과 `supabase/seed.sql`의 생성·동기화 경로를 함께 정리한다.
 
-### 3) 두 컬렉션의 DB 멤버십을 완성
+### 3) 두 컬렉션의 DB 멤버십을 완성 — 완료
 
 - 기존 79개는 같은 `mountain_id`를 재사용한다.
 - BAC 전용 21개를 더해 `bac_100`의 `collection_mountains`가 정확히 100개가 되도록 새 idempotent 마이그레이션을 만든다.
@@ -279,10 +299,10 @@ certification_sessions + certification_members
 
 ### 데이터 무결성
 
-- [ ] 산림청 멤버십이 정확히 100개다.
-- [ ] BAC 멤버십이 정확히 100개다.
-- [ ] 교집합은 79개, 산림청 전용 21개, BAC 전용 21개다.
-- [ ] 컬렉션별 `display_order`가 1–100이고 중복·누락이 없다.
+- [x] 산림청 멤버십이 정확히 100개다.
+- [x] BAC 멤버십이 정확히 100개다.
+- [x] 교집합은 79개, 산림청 전용 21개, BAC 전용 21개다.
+- [x] 컬렉션별 `display_order`가 1–100이고 중복·누락이 없다.
 - [ ] 동명이산과 서로 다른 대표봉이 올바른 `mountain_id`/`verification_point_id`로 연결된다.
 - [ ] 모든 미검증 인증지는 좌표가 없고 `pending`이며 인증에 사용할 수 없다.
 - [ ] 모든 `verified` 인증지는 출처와 검증 근거가 있다.
@@ -317,10 +337,10 @@ certification_sessions + certification_members
 
 ### 기술 검증
 
-- [ ] 새 DB에서 `0001`부터 최신 마이그레이션과 seed를 순서대로 적용할 수 있다.
+- [x] 새 DB에서 `0001`부터 최신 마이그레이션과 seed를 순서대로 적용할 수 있다.
 - [ ] 마이그레이션은 재실행 안전성 또는 명시된 일회성 동작을 갖는다.
-- [ ] `npm run typecheck`가 통과한다.
-- [ ] `npm run lint`가 통과한다.
+- [x] `npm run typecheck`가 통과한다.
+- [x] `npm run lint`가 통과한다.
 - [ ] 변경한 Expo Router 경로를 실제로 열어 본다.
 - [ ] 게스트 모드와 Supabase 연결 모드를 모두 확인한다.
 - [ ] 서비스 역할 키, 개인 토큰, 원시 사용자 위치 같은 비밀·민감 데이터가 커밋되지 않았다.
@@ -336,4 +356,4 @@ Phase/목표:
 데이터 출처와 좌표 상태:
 ```
 
-첫 구현은 위 **8. 다음 구현 우선순위**의 1번부터 시작한다. 이미 완료된 Phase 1–5를 재작성하거나, 화면만 100개처럼 보이게 만들어 데이터 공백을 숨기지 않는다.
+첫 구현은 위 **8. 다음 구현 우선순위**의 4번부터 시작한다. 이미 완료된 Phase 1–5와 우선순위 1–3을 재작성하거나, 화면만 100개처럼 보이게 만들어 데이터 공백을 숨기지 않는다.

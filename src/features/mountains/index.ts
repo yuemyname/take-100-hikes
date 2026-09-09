@@ -1,2 +1,2 @@
 export * from './queries';
-export { getSeedArea, LOCAL_MOUNTAINS } from './api';
+export { getSeedArea, hasVerificationCoordinates, LOCAL_MOUNTAINS, type VerifiableMountain } from './api';

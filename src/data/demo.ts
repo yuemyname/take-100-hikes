@@ -14,6 +14,7 @@ const p = (id: string, username: string, display_name: string, bio: string | nul
   username,
   display_name,
   avatar_url: null,
+  home_background_url: null,
   bio,
   created_at: '2026-01-10T09:00:00.000Z',
 });

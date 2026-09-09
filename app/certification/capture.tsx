@@ -2,17 +2,15 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Image, Linking, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText, CertificationStatusBanner, EmptyState, LoadingSkeleton, PrimaryButton, SecondaryButton, TopBar, type CertificationStatus } from '@/components/ui';
 import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
-import { useAuth } from '@/features/auth';
 import { useSummitProximity } from '@/features/certification';
-import { useMountain } from '@/features/mountains';
+import { hasVerificationCoordinates, useMountain } from '@/features/mountains';
 import { track } from '@/lib/analytics';
 import { getDistanceMeters } from '@/lib/geo';
-import { isSupabaseConfigured } from '@/lib/supabase';
 
 /**
  * Summit certification capture — spec §5.2: mountain name, location status,
@@ -22,7 +20,6 @@ import { isSupabaseConfigured } from '@/lib/supabase';
 export default function CaptureScreen() {
   const router = useRouter();
   const { mountainId } = useLocalSearchParams<{ mountainId: string }>();
-  const { status: authStatus } = useAuth();
   const mountain = useMountain(mountainId);
   const proximity = useSummitProximity(mountain.data);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -31,28 +28,29 @@ export default function CaptureScreen() {
   const [capturing, setCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
 
-  // Development helpers for guest / unconfigured builds only.
-  const demoMode = __DEV__ && (authStatus === 'guest' || !isSupabaseConfigured);
+  // Development-only helper. React Native removes this branch from Release builds.
+  const testMode = __DEV__;
   const [demoAtSummit, setDemoAtSummit] = useState(false);
+  const verificationMountain = hasVerificationCoordinates(mountain.data) ? mountain.data : null;
 
   useEffect(() => {
     if (mountain.data) track('verification_started', { mountainId: mountain.data.id });
   }, [mountain.data]);
 
   const position = useMemo(() => {
-    if (demoAtSummit && mountain.data) {
-      return { latitude: mountain.data.latitude + 0.0002, longitude: mountain.data.longitude, accuracyM: 12 };
+    if (demoAtSummit && verificationMountain) {
+      return { latitude: verificationMountain.latitude, longitude: verificationMountain.longitude, accuracyM: 12 };
     }
     return proximity.position;
-  }, [demoAtSummit, mountain.data, proximity.position]);
+  }, [demoAtSummit, verificationMountain, proximity.position]);
 
   const distanceMeters = useMemo(
-    () => (position && mountain.data ? getDistanceMeters(position, mountain.data) : null),
-    [position, mountain.data],
+    () => (position && verificationMountain ? getDistanceMeters(position, verificationMountain) : null),
+    [position, verificationMountain],
   );
   const eligible =
-    distanceMeters !== null && mountain.data !== null && mountain.data !== undefined
-      ? distanceMeters <= mountain.data.verification_radius_m
+    distanceMeters !== null && verificationMountain
+      ? distanceMeters <= verificationMountain.verification_radius_m
       : false;
 
   useEffect(() => {
@@ -78,8 +76,8 @@ export default function CaptureScreen() {
       if (cameraRef.current && cameraPermission?.granted) {
         const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
         photoUri = photo?.uri ?? null;
-      } else if (demoMode) {
-        photoUri = Image.resolveAssetSource(require('../../assets/mascots/guide.png')).uri;
+      } else if (testMode) {
+        photoUri = Image.resolveAssetSource(require('../../assets/photos/home-hero.png')).uri;
       }
       if (!photoUri) throw new Error('사진을 찍지 못했어요.');
 
@@ -132,9 +130,24 @@ export default function CaptureScreen() {
   }
 
   const m = mountain.data;
+  if (!hasVerificationCoordinates(m)) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.padded}>
+          <TopBar title="인증하기" onBack={goBack} />
+          <EmptyState
+            title="인증지 좌표를 확인하고 있어요"
+            description={`${m.name_ko}의 GPS 인증지는 검증이 끝난 뒤 열릴 예정이에요. 좌표를 추측해 인증하지 않아요.`}
+            actionLabel="산 상세로 돌아가기"
+            onAction={goBack}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
   const cameraDenied = cameraPermission !== null && !cameraPermission.granted && !cameraPermission.canAskAgain;
   const cameraAvailable = Boolean(cameraPermission?.granted);
-  const canShoot = eligible && !capturing && (cameraAvailable ? cameraReady : demoMode);
+  const canShoot = eligible && !capturing && (cameraAvailable ? cameraReady : testMode);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -230,15 +243,15 @@ export default function CaptureScreen() {
         <AppText variant="caption" color="inkMuted" align="center">
           {eligible ? '정상이 보이게 찍어주세요' : '정상 반경 안에 들어오면 촬영할 수 있어요'}
         </AppText>
-        {demoMode ? (
+        {testMode ? (
           <View style={styles.demo}>
             <AppText variant="caption" color="inkMuted">
-              개발용 · {Platform.OS === 'web' ? '웹' : '시뮬레이터'} 테스트
+              개발용 위치 보정 · Release 빌드에서는 숨겨져요
             </AppText>
             <SecondaryButton
-              label={demoAtSummit ? '데모 위치 끄기' : '데모: 정상 위치로 이동'}
+              label={demoAtSummit ? '실제 위치 사용' : '테스트: 정상 위치로 보정'}
               fullWidth={false}
-              onPress={() => setDemoAtSummit((v) => !v)}
+              onPress={() => setDemoAtSummit((value) => !value)}
             />
           </View>
         ) : null}

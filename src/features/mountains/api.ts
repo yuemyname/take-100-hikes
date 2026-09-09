@@ -21,12 +21,28 @@ export function getSeedArea(slug: string): string | undefined {
   return seed.find((m) => m.slug === slug)?.area;
 }
 
+export type VerifiableMountain = Mountain & {
+  latitude: number;
+  longitude: number;
+  verification_radius_m: number;
+};
+
+/** Pending BAC identities must never enter the legacy GPS certification flow. */
+export function hasVerificationCoordinates(mountain: Mountain | null | undefined): mountain is VerifiableMountain {
+  return Boolean(
+    mountain &&
+      Number.isFinite(mountain.latitude) &&
+      Number.isFinite(mountain.longitude) &&
+      Number.isFinite(mountain.verification_radius_m),
+  );
+}
+
 function sortByDisplayOrder(list: Mountain[]): Mountain[] {
   return [...list].sort((a, b) => (a.display_order ?? 9999) - (b.display_order ?? 9999));
 }
 
-export async function fetchMountains(): Promise<Mountain[]> {
-  if (!isSupabaseConfigured) return sortByDisplayOrder(LOCAL_MOUNTAINS);
+export async function fetchMountains(useRemote = isSupabaseConfigured): Promise<Mountain[]> {
+  if (!useRemote) return sortByDisplayOrder(LOCAL_MOUNTAINS);
 
   const { data, error } = await getSupabase()
     .from('mountains')

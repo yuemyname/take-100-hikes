@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-09-09T05:59:20.745Z",
+  "sourcePolicy": "Only visually reviewed, exact mountain-and-region matches with an explicit public or Creative Commons reuse license are bundled.",
+  "gpsPolicy": "Photo sources and their page coordinates are never copied into GPS verification fields.",
+  "records": [
+    {
+      "slug": "gamaksan-wonju",
+      "areaGuard": "제천",
+      "imageUrl": "https://jecheon.grandculture.net/Image?localName=jecheon&id=GC033P00886",
+      "articleUrl": "https://jecheon.grandculture.net/jecheon/search/GC033P00886",
+      "evidenceUrl": "https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?menuNo=200018&wrtSn=12458543",
+      "evidenceChecks": [
+        "감악산",
+        "img_license01.png"
+      ],
+      "author": "한국학중앙연구원 「감악산」 (제작: 충청북도문화재연구원)",
+      "license": "공공누리 제1유형",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+      "mountainName": "감악산 (원주)",
+      "repositoryArea": "강원 원주·충북 제천",
+      "provider": "공공저작물",
+      "gpsCoordinateChanged": false
+    },
+    {
+      "slug": "gubongsan-jinan",
+      "areaGuard": "진안",
+      "imageUrl": "https://gongu.copyright.or.kr/gongu/wrt/cmmn/wrtFileDownload.do?wrtSn=11052345&fileSn=1",
+      "articleUrl": "https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?menuNo=200018&wrtSn=11052345",
+      "evidenceUrl": "https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?menuNo=200018&wrtSn=11052345",
+      "evidenceChecks": [
+        "진안_구봉산_00054",
+        "img_license21.png"
+      ],
+      "author": "박정병 「진안_구봉산_00054」",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/deed.ko",
+      "mountainName": "구봉산 (진안)",
+      "repositoryArea": "전북 진안",
+      "provider": "공공저작물",
+      "gpsCoordinateChanged": false
+    },
+    {
+      "slug": "dongaksan-gokseong",
+      "areaGuard": "곡성",
+      "imageUrl": "https://www.gokseong.go.kr/tour/ybscript.io/common/file_download/97920/11591/_P6A8569.jpg",
+      "articleUrl": "https://www.gokseong.go.kr/tour/tourguide/recommended_site?idx=97920&mode=view",
+      "evidenceUrl": "https://www.gokseong.go.kr/tour/tourguide/recommended_site?idx=97920&mode=view",
+      "evidenceChecks": [
+        "동악산",
+        "licenseType2.do"
+      ],
+      "author": "곡성군·나종화 「봄여행- 동악산에 그려진 한반도 지도를 찾아서」",
+      "license": "공공누리 제2유형",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType2.do",
+      "mountainName": "동악산 (곡성)",
+      "repositoryArea": "전남 곡성",
+      "provider": "공공저작물",
+      "gpsCoordinateChanged": false
+    }
+  ]
+}

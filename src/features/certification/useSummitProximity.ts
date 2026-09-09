@@ -2,6 +2,7 @@ import * as Location from 'expo-location';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getDistanceMeters, isWithinVerificationRadius } from '@/lib/geo';
+import { hasVerificationCoordinates } from '@/features/mountains/api';
 import type { Mountain } from '@/types';
 
 import type { LocationPermission, SummitProximity } from './types';
@@ -80,16 +81,17 @@ export function useSummitProximity(mountain: Mountain | null | undefined): Summi
     };
   }, [startWatching]);
 
+  const target = hasVerificationCoordinates(mountain) ? mountain : null;
   const distanceMeters =
-    position && mountain
-      ? getDistanceMeters(position, { latitude: mountain.latitude, longitude: mountain.longitude })
+    position && target
+      ? getDistanceMeters(position, { latitude: target.latitude, longitude: target.longitude })
       : null;
 
   const eligible =
-    distanceMeters !== null && mountain
+    distanceMeters !== null && target
       ? isWithinVerificationRadius({
           distanceMeters,
-          verificationRadiusM: mountain.verification_radius_m,
+          verificationRadiusM: target.verification_radius_m,
           locationPermissionGranted: permission === 'granted',
           currentPositionAvailable: position !== null,
         })

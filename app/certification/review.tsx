@@ -7,7 +7,7 @@ import { AppText, EmptyState, PrimaryButton, Screen, SecondaryButton, TopBar } f
 import { colors, radii, spacing } from '@/constants';
 import { OFFICIAL_STICKERS } from '@/data/officialArt';
 import type { CaptureDraft } from '@/features/certification';
-import { useMountain } from '@/features/mountains';
+import { hasVerificationCoordinates, useMountain } from '@/features/mountains';
 import { formatDistance } from '@/lib/geo';
 
 type Params = {
@@ -26,7 +26,7 @@ export default function ReviewScreen() {
   const params = useLocalSearchParams<Params>();
   const mountain = useMountain(params.mountainId);
 
-  const draft: CaptureDraft | null = mountain.data && params.photoUri
+  const draft: CaptureDraft | null = hasVerificationCoordinates(mountain.data) && params.photoUri
     ? {
         mountainId: mountain.data.id,
         photoUri: params.photoUri,

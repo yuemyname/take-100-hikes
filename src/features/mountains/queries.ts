@@ -15,13 +15,20 @@ import {
 
 export const mountainKeys = {
   all: ['mountains'] as const,
+  list: (source: 'local' | 'remote') => ['mountains', 'list', source] as const,
   detail: (id: string) => ['mountains', id] as const,
   completed: (userId: string | null) => ['mountains', 'completed', userId] as const,
   favorites: (userId: string | null) => ['mountains', 'favorites', userId] as const,
 };
 
 export function useMountains() {
-  return useQuery({ queryKey: mountainKeys.all, queryFn: fetchMountains });
+  const { user, status } = useAuth();
+  const remote = isSupabaseConfigured && Boolean(user);
+  return useQuery({
+    queryKey: mountainKeys.list(remote ? 'remote' : 'local'),
+    queryFn: () => fetchMountains(remote),
+    enabled: status !== 'loading',
+  });
 }
 
 export function useMountain(id: string | undefined) {

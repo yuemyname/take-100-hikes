@@ -35,7 +35,31 @@ export interface CompletedMountain {
   /** Latest confirmed capture for this mountain. */
   certifiedAt: string;
   sessionId: string;
+  photoUrl: string | null;
   partySize: number;
+}
+
+/** One confirmed visit to a mountain. Repeated visits stay separate here. */
+export interface MountainCertificationRecord {
+  certifiedAt: string;
+  sessionId: string;
+  photoUrl: string | null;
+  partySize: number;
+}
+
+export interface ProfileMediaSelection {
+  uri: string;
+  mimeType: string | null;
+}
+
+export interface UpdateProfileInput {
+  username: string;
+  displayName: string;
+  bio: string;
+  /** undefined keeps the current value, null removes it, and a selection uploads it. */
+  avatar?: ProfileMediaSelection | null;
+  /** Personal home hero background with the same update semantics as avatar. */
+  homeBackground?: ProfileMediaSelection | null;
 }
 
 export function relationshipOf(sets: FollowSets, otherId: string): RelationshipState {

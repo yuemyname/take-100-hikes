@@ -1,7 +1,8 @@
-import { Image } from 'expo-image';
+import { Image, type ImageProps } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { colors, radii, spacing } from '@/constants';
+import { getMountainImage } from '@/data/mountainImages';
 import { OFFICIAL_STICKERS } from '@/data/officialArt';
 import type { Mountain } from '@/types';
 
@@ -13,6 +14,10 @@ export interface MountainCardProps {
   mountain: Mountain;
   index: number;
   completed: boolean;
+  /** The current user's latest certification photo, when this mountain is completed. */
+  certificationPhotoUri?: string | null;
+  /** Licensed/local fallback while a mountain-specific photograph is unavailable. */
+  fallbackPhotoSource?: ImageProps['source'];
   onPress: () => void;
 }
 
@@ -22,7 +27,17 @@ const formatAltitude = (m: number | null) => (m === null ? '' : `${m.toLocaleStr
  * Image-first mountain collection card.
  * The collectible is the mountain completion itself — there is no one-character-per-mountain mapping.
  */
-export function MountainCard({ mountain, index, completed, onPress }: MountainCardProps) {
+export function MountainCard({
+  mountain,
+  index,
+  completed,
+  certificationPhotoUri,
+  fallbackPhotoSource,
+  onPress,
+}: MountainCardProps) {
+  const licensedImage = getMountainImage(mountain.slug);
+  const photoUri = completed ? certificationPhotoUri ?? mountain.image_url : mountain.image_url;
+
   return (
     <Pressable
       onPress={onPress}
@@ -31,7 +46,14 @@ export function MountainCard({ mountain, index, completed, onPress }: MountainCa
       style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}
     >
       <View style={styles.photoWrap}>
-        <MountainPhoto uri={mountain.image_url} seed={index} style={styles.photo} accessibilityLabel={`${mountain.name_ko} 사진`} />
+        <MountainPhoto
+          uri={photoUri}
+          source={photoUri ? undefined : licensedImage?.source}
+          fallbackSource={fallbackPhotoSource}
+          seed={index}
+          style={styles.photo}
+          accessibilityLabel={completed && certificationPhotoUri ? `${mountain.name_ko} 내 인증 사진` : `${mountain.name_ko} 기본 사진`}
+        />
         <View style={styles.numberTag}>
           <AppText variant="caption" weight="800" color="surface">#{index}</AppText>
         </View>

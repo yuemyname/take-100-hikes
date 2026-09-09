@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -10,6 +11,7 @@ import { useProfile, useViewerId } from '@/features/social';
 
 /** MY — spec §8. Shared hikes appear in history as "N명 함께"; badges land with Phase 6 polish. */
 export default function ProfileScreen() {
+  const router = useRouter();
   const { status, signOut } = useAuth();
   const viewerId = useViewerId();
   const profile = useProfile(viewerId);
@@ -47,7 +49,15 @@ export default function ProfileScreen() {
           onAction={() => profile.refetch()}
         />
       ) : (
-        <ProfileBody user={profile.data} showCaption />
+        <ProfileBody
+          user={profile.data}
+          showCaption
+          action={
+            <View style={styles.editProfile}>
+              <SecondaryButton label="프로필 · 홈 배경 수정" onPress={() => router.push('/profile/edit')} />
+            </View>
+          }
+        />
       )}
 
       {error ? (
@@ -66,5 +76,6 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', marginTop: spacing.xl },
   gap: { height: spacing.md },
   error: { marginTop: spacing.lg },
+  editProfile: { alignSelf: 'stretch', marginTop: spacing.lg },
   signOut: { marginTop: spacing.xxxl },
 });

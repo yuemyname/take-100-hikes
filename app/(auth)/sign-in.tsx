@@ -1,12 +1,14 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
-import { AppText, Mascot, OFFICIAL_ART, PrimaryButton, Screen, SecondaryButton, SpeechBubble, TextField, Wordmark } from '@/components/ui';
-import { GUIDE_MASCOT } from '@/data/mascots';
+import { AppText, PrimaryButton, Screen, SecondaryButton, TextField, Wordmark } from '@/components/ui';
 import { colors, spacing } from '@/constants';
 import { fieldErrors, signInSchema, useAuth } from '@/features/auth';
 import { authErrorMessage } from '@/features/auth/messages';
+
+const LOGIN_TITLE_LOGO = require('../../assets/brand/login-title-logo.png');
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -41,12 +43,12 @@ export default function SignInScreen() {
           <AppText variant="body" color="inkMuted">
             100개의 산, 100개의 이야기.
           </AppText>
-          <View style={styles.mascotRow}>
-            <Mascot look={GUIDE_MASCOT} size={OFFICIAL_ART.boxFor(150)} accessibilityLabel="백픽스 가이드 캐릭터" />
-            <View style={styles.bubble}>
-              <SpeechBubble text="이번엔 어디 갈 건데?" tone="surface" />
-            </View>
-          </View>
+          <Image
+            source={LOGIN_TITLE_LOGO}
+            contentFit="contain"
+            style={styles.titleLogo}
+            accessibilityLabel="대체 산을 왜 타는 건데 타이틀 로고"
+          />
         </View>
 
         {isConfigured ? (
@@ -57,9 +59,9 @@ export default function SignInScreen() {
               onChangeText={setEmail}
               placeholder="hello@example.com"
               autoCapitalize="none"
-              autoComplete="email"
+              autoComplete={Platform.OS === 'ios' ? undefined : 'username'}
               keyboardType="email-address"
-              textContentType="emailAddress"
+              textContentType={Platform.OS === 'ios' ? 'username' : undefined}
               error={errors.email}
             />
             <TextField
@@ -68,8 +70,8 @@ export default function SignInScreen() {
               onChangeText={setPassword}
               placeholder="8자 이상"
               secureTextEntry
-              autoComplete="password"
-              textContentType="password"
+              autoComplete={Platform.OS === 'ios' ? undefined : 'current-password'}
+              textContentType={Platform.OS === 'ios' ? 'password' : undefined}
               error={errors.password}
               onSubmitEditing={handleSubmit}
               returnKeyType="done"
@@ -102,8 +104,7 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, justifyContent: 'center', paddingVertical: spacing.xxxl },
   hero: { marginBottom: spacing.xxxl },
-  mascotRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.lg, gap: spacing.xs },
-  bubble: { flex: 1, alignItems: 'flex-start', marginTop: -spacing.huge },
+  titleLogo: { width: '100%', maxWidth: 340, aspectRatio: 1280 / 830, alignSelf: 'center', marginTop: spacing.xl },
   formError: { marginBottom: spacing.md },
   gap: { height: spacing.md },
   notice: {

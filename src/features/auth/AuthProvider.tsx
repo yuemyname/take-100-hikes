@@ -1,4 +1,5 @@
 import type { Session, User } from '@supabase/supabase-js';
+import * as Linking from 'expo-linking';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
@@ -69,7 +70,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const { data, error } = await getSupabase().auth.signUp({
       email,
       password,
-      options: { data: { username, display_name: displayName ?? username } },
+      options: {
+        data: { username, display_name: displayName ?? username },
+        emailRedirectTo: Linking.createURL('/sign-in'),
+      },
     });
     if (error) throw error;
     return { needsEmailConfirmation: !data.session };

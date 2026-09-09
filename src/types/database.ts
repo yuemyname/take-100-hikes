@@ -12,6 +12,7 @@ export interface Profile {
   username: string;
   display_name: string | null;
   avatar_url: string | null;
+  home_background_url: string | null;
   bio: string | null;
   primary_collection_id?: CollectionId | null;
   created_at: string;
@@ -24,9 +25,10 @@ export interface Mountain {
   name_en: string | null;
   altitude_m: number | null;
   region: string | null;
-  latitude: number;
-  longitude: number;
-  verification_radius_m: number;
+  /** Legacy summit target. Null until a verification point has been verified. */
+  latitude: number | null;
+  longitude: number | null;
+  verification_radius_m: number | null;
   image_url: string | null;
   mascot_key: string | null;
   description: string | null;

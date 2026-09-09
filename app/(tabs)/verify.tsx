@@ -6,9 +6,10 @@ import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText, EmptyState, InvitationCard, LoadingSkeleton, MountainPhoto, Screen, SecondaryButton, TopBar } from '@/components/ui';
 import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
+import { getMountainImage } from '@/data/mountainImages';
 import { OFFICIAL_CHARACTERS, OFFICIAL_STICKERS } from '@/data/officialArt';
 import { useMyInvitations, useRespondToInvitation, useSummitProximity } from '@/features/certification';
-import { useCompletedMountainIds, useMountains } from '@/features/mountains';
+import { hasVerificationCoordinates, useCompletedMountainIds, useMountains } from '@/features/mountains';
 import { formatDistance, getDistanceMeters } from '@/lib/geo';
 
 /** 인증 tab: pick the mountain you are standing on (nearest first), then capture — spec §5. */
@@ -30,6 +31,7 @@ export default function VerifyScreen() {
     if (!proximity.position) return [];
     const pos = proximity.position;
     return list
+      .filter(hasVerificationCoordinates)
       .map((m) => ({ mountain: m, distance: getDistanceMeters(pos, m) }))
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 5);
@@ -109,7 +111,14 @@ export default function VerifyScreen() {
             accessibilityLabel={`${mountain.name_ko}, ${formatDistance(distance)} 거리, 인증 시작`}
             style={({ pressed }) => [styles.row, index === 0 ? styles.nearestRow : null, pressed ? styles.rowPressed : null]}
           >
-            <MountainPhoto uri={mountain.image_url} seed={mountain.display_order ?? 1} radius={radii.card} style={styles.thumb} accessibilityLabel={`${mountain.name_ko} 사진`} />
+            <MountainPhoto
+              uri={mountain.image_url}
+              source={getMountainImage(mountain.slug)?.source}
+              seed={mountain.display_order ?? 1}
+              radius={radii.card}
+              style={styles.thumb}
+              accessibilityLabel={`${mountain.name_ko} 사진`}
+            />
             <View style={styles.rowText}>
               {index === 0 ? <AppText variant="caption" weight="700" color="red">제일 가까움</AppText> : null}
               <AppText variant="heading3">{mountain.name_ko}</AppText>

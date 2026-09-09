@@ -1,0 +1,33 @@
+name: iOS TestFlight
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  build_ios:
+    name: Validate and build iOS
+    type: build
+    params:
+      platform: ios
+      profile: production
+    hooks:
+      after_install_node_modules:
+        - name: TypeScript check
+          run: npm run typecheck
+        - name: Lint
+          run: npm run lint
+        - name: Collection and GPS policy check
+          run: npm run data:validate
+
+  testflight:
+    name: Upload to TestFlight
+    type: testflight
+    needs:
+      - build_ios
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: production
+      changelog: ${{ github.commit_message || '100PEAKS latest test build' }}

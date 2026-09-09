@@ -5,12 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText, CertificationStatusBanner, EmptyState, LoadingSkeleton, MountainPhoto, ParticipantRow, PrimaryButton, Screen, SecondaryButton, TopBar, type CertificationStatus } from '@/components/ui';
 import { colors, radii, spacing } from '@/constants';
-import { useAuth } from '@/features/auth';
 import { authErrorMessage } from '@/features/auth/messages';
 import { useRespondToInvitation, useSession, useSummitProximity } from '@/features/certification';
+import { hasVerificationCoordinates } from '@/features/mountains';
 import { useViewerId } from '@/features/social';
 import { getDistanceMeters } from '@/lib/geo';
-import { isSupabaseConfigured } from '@/lib/supabase';
 
 /**
  * Invited friend accepts or declines — spec §6.3 steps 6–8, §6.6:
@@ -20,22 +19,25 @@ export default function JoinScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
-  const { status: authStatus } = useAuth();
   const viewerId = useViewerId();
   const session = useSession(sessionId);
   const respond = useRespondToInvitation();
   const proximity = useSummitProximity(session.data?.mountain);
 
-  const demoMode = __DEV__ && (authStatus === 'guest' || !isSupabaseConfigured);
+  // Development-only helper. React Native removes this branch from Release builds.
+  const testMode = __DEV__;
   const [demoAtSummit, setDemoAtSummit] = useState(false);
 
   const mountain = session.data?.mountain;
+  const verificationMountain = hasVerificationCoordinates(mountain) ? mountain : null;
   const position = useMemo(() => {
-    if (demoAtSummit && mountain) return { latitude: mountain.latitude + 0.0002, longitude: mountain.longitude, accuracyM: 12 };
+    if (demoAtSummit && verificationMountain) {
+      return { latitude: verificationMountain.latitude, longitude: verificationMountain.longitude, accuracyM: 12 };
+    }
     return proximity.position;
-  }, [demoAtSummit, mountain, proximity.position]);
-  const distance = position && mountain ? getDistanceMeters(position, mountain) : null;
-  const eligible = distance !== null && mountain ? distance <= mountain.verification_radius_m : false;
+  }, [demoAtSummit, verificationMountain, proximity.position]);
+  const distance = position && verificationMountain ? getDistanceMeters(position, verificationMountain) : null;
+  const eligible = distance !== null && verificationMountain ? distance <= verificationMountain.verification_radius_m : false;
 
   const bannerStatus: CertificationStatus = (() => {
     if (proximity.permission === 'denied' && !demoAtSummit) return 'permission';
@@ -89,6 +91,20 @@ export default function JoinScreen() {
     );
   }
 
+  if (!hasVerificationCoordinates(s.mountain)) {
+    return (
+      <Screen>
+        <TopBar title="공동 인증 요청" onBack={goBack} />
+        <EmptyState
+          title="이 산의 인증을 잠시 열 수 없어요"
+          description="인증지 좌표 검증이 끝날 때까지 공동 인증 참여도 안전하게 차단돼요."
+          actionLabel="인증 현황 보기"
+          onAction={goToSession}
+        />
+      </Screen>
+    );
+  }
+
   const accept = () => {
     if (!position) return;
     respond.mutate({ sessionId: s.id, accept: true, position }, { onSuccess: goToSession });
@@ -122,8 +138,11 @@ export default function JoinScreen() {
           ) : proximity.permission === 'denied' && !demoAtSummit ? (
             <SecondaryButton label="설정 열기" onPress={() => Linking.openSettings().catch(() => {})} />
           ) : null}
-          {demoMode ? (
-            <SecondaryButton label={demoAtSummit ? '데모 위치 끄기' : '데모: 정상 위치로 이동'} onPress={() => setDemoAtSummit((v) => !v)} />
+          {testMode ? (
+            <SecondaryButton
+              label={demoAtSummit ? '실제 위치 사용' : '테스트: 정상 위치로 보정'}
+              onPress={() => setDemoAtSummit((value) => !value)}
+            />
           ) : null}
         </View>
         {respond.isError ? (

@@ -11,11 +11,13 @@ import {
   MOUNTAIN_FILTERS,
   REGION_ORDER,
   filterMountains,
-  useCompletedMountainIds,
   useMountains,
   type MountainFilter,
 } from '@/features/mountains';
+import { useCompletedMountains, useViewerId } from '@/features/social';
 import type { Mountain } from '@/types';
+
+const DEFAULT_MOUNTAIN_PHOTO = require('../../assets/photos/home-hero.png');
 
 export default function MountainsScreen() {
   const router = useRouter();
@@ -23,10 +25,18 @@ export default function MountainsScreen() {
   const [region, setRegion] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const { id: collectionId, collection } = usePrimaryCollection();
+  const viewerId = useViewerId();
 
   const mountains = useMountains();
-  const completedQuery = useCompletedMountainIds();
-  const completed = useMemo(() => completedQuery.data ?? new Set<string>(), [completedQuery.data]);
+  const completedQuery = useCompletedMountains(viewerId);
+  const completed = useMemo(
+    () => new Set((completedQuery.data ?? []).map((record) => record.mountainId)),
+    [completedQuery.data],
+  );
+  const completionByMountain = useMemo(
+    () => new Map((completedQuery.data ?? []).map((record) => [record.mountainId, record])),
+    [completedQuery.data],
+  );
   const collectionMountains = useMemo(
     () => mountainsForCollection(mountains.data ?? [], collectionId),
     [mountains.data, collectionId],
@@ -56,7 +66,7 @@ export default function MountainsScreen() {
       {collectionId === 'bac_100' ? (
         <View style={styles.pendingNotice}>
           <AppText variant="caption" color="inkMuted">
-            현재 공통 산 {collectionMountains.length}개 연결 · BAC 전용 {BAC_PENDING_COUNT}개는 인증지 좌표 검증 중
+            BAC 100개 산 정체성 연결 · 전용 {BAC_PENDING_COUNT}개는 인증지 좌표 검증 중
           </AppText>
         </View>
       ) : null}
@@ -98,13 +108,15 @@ export default function MountainsScreen() {
         mountain={item}
         index={indexById.get(item.id) ?? 0}
         completed={completed.has(item.id)}
+        certificationPhotoUri={completionByMountain.get(item.id)?.photoUrl}
+        fallbackPhotoSource={DEFAULT_MOUNTAIN_PHOTO}
         onPress={() => router.push({ pathname: '/mountain/[id]', params: { id: item.id } })}
       />
     </View>
   );
 
   const renderEmpty = () => {
-    if (mountains.isLoading) {
+    if (mountains.isLoading || completedQuery.isLoading) {
       return (
         <View style={styles.skeletonGrid}>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -113,8 +125,18 @@ export default function MountainsScreen() {
         </View>
       );
     }
-    if (mountains.isError) {
-      return <EmptyState title="잠깐 연결이 끊겼어요." description="다시 시도해주세요." actionLabel="다시 시도" onAction={() => mountains.refetch()} />;
+    if (mountains.isError || completedQuery.isError) {
+      return (
+        <EmptyState
+          title="잠깐 연결이 끊겼어요."
+          description="다시 시도해주세요."
+          actionLabel="다시 시도"
+          onAction={() => {
+            mountains.refetch();
+            completedQuery.refetch();
+          }}
+        />
+      );
     }
     if (search.trim()) return <EmptyState title={`'${search.trim()}' 산은 이 컬렉션에 없어요`} description="다른 컬렉션이나 이름을 확인해볼까요?" />;
     if (filter === 'done') {

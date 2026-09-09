@@ -7,14 +7,16 @@ import {
   fetchCertifiedUsers,
   fetchCompletedMountains,
   fetchFollowSets,
+  fetchMountainCertificationHistory,
   fetchProfile,
   fetchProfileStats,
   fetchProfilesByIds,
   resolveViewerId,
   searchProfiles,
   setFollow,
+  updateProfile,
 } from './api';
-import { relationshipOf, type FollowSets } from './types';
+import { relationshipOf, type FollowSets, type UpdateProfileInput } from './types';
 
 export const socialKeys = {
   profile: (id: string) => ['profile', id] as const,
@@ -23,6 +25,7 @@ export const socialKeys = {
   followSets: (viewerId: string) => ['follows', viewerId] as const,
   certifiers: (mountainId: string, viewerId: string) => ['certifiers', mountainId, viewerId] as const,
   completed: (userId: string) => ['completedMountains', userId] as const,
+  history: (userId: string, mountainId: string) => ['mountainCertificationHistory', userId, mountainId] as const,
   stats: (userId: string) => ['profileStats', userId] as const,
 };
 
@@ -33,6 +36,23 @@ export function useViewerId(): string {
 
 export function useProfile(id: string | undefined) {
   return useQuery({ queryKey: socialKeys.profile(id ?? ''), queryFn: () => fetchProfile(id ?? ''), enabled: Boolean(id) });
+}
+
+export function useUpdateProfile() {
+  const viewerId = useViewerId();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdateProfileInput) => updateProfile(viewerId, input),
+    onSuccess: (profile) => {
+      queryClient.setQueryData(socialKeys.profile(viewerId), profile);
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['certifiers'] });
+      queryClient.invalidateQueries({ queryKey: ['certificationSession'] });
+      queryClient.invalidateQueries({ queryKey: ['invitations'] });
+      queryClient.invalidateQueries({ queryKey: ['invitableFriends'] });
+    },
+  });
 }
 
 export function useProfilesByIds(ids: string[]) {
@@ -113,6 +133,15 @@ export function useCompletedMountains(userId: string | undefined) {
   });
 }
 
+export function useMountainCertificationHistory(mountainId: string | undefined) {
+  const viewerId = useViewerId();
+  return useQuery({
+    queryKey: socialKeys.history(viewerId, mountainId ?? ''),
+    queryFn: () => fetchMountainCertificationHistory(viewerId, mountainId ?? ''),
+    enabled: Boolean(mountainId),
+  });
+}
+
 export function useProfileStats(userId: string | undefined) {
   return useQuery({
     queryKey: socialKeys.stats(userId ?? ''),
@@ -124,6 +153,7 @@ export function useProfileStats(userId: string | undefined) {
 /** Query keys other features must invalidate when certifications change. */
 export const invalidateAfterCertification = (queryClient: ReturnType<typeof useQueryClient>, userId: string) => {
   queryClient.invalidateQueries({ queryKey: ['certifiers'] });
+  queryClient.invalidateQueries({ queryKey: ['mountainCertificationHistory'] });
   queryClient.invalidateQueries({ queryKey: socialKeys.completed(userId) });
   queryClient.invalidateQueries({ queryKey: socialKeys.stats(userId) });
   queryClient.invalidateQueries({ queryKey: mountainKeys.all });

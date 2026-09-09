@@ -1,4 +1,4 @@
-import { Image } from 'expo-image';
+import { Image, type ImageProps } from 'expo-image';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 
@@ -6,6 +6,10 @@ import { colors, photoTones } from '@/constants';
 
 export interface MountainPhotoProps {
   uri?: string | null;
+  /** Bundled mountain-specific photography used when there is no remote URI. */
+  source?: ImageProps['source'];
+  /** Optional licensed/local photography used when the mountain has no image yet. */
+  fallbackSource?: ImageProps['source'];
   /** Rounded corners; pass 0 for full-bleed. */
   radius?: number;
   style?: StyleProp<ViewStyle>;
@@ -13,7 +17,6 @@ export interface MountainPhotoProps {
   seed?: number;
   accessibilityLabel?: string;
 }
-
 
 function ridge(seed: number, baseline: number, amplitude: number): string {
   const pts: string[] = ['M 0 100', `L 0 ${baseline}`];
@@ -30,7 +33,15 @@ function ridge(seed: number, baseline: number, amplitude: number): string {
  * otherwise a dark, layered ridge silhouette so empty slots still read as
  * "mountain", not "missing image".
  */
-export function MountainPhoto({ uri, radius = 0, style, seed = 1, accessibilityLabel }: MountainPhotoProps) {
+export function MountainPhoto({
+  uri,
+  source,
+  fallbackSource,
+  radius = 0,
+  style,
+  seed = 1,
+  accessibilityLabel,
+}: MountainPhotoProps) {
   return (
     <View
       style={[styles.wrap, { borderRadius: radius }, style]}
@@ -39,6 +50,10 @@ export function MountainPhoto({ uri, radius = 0, style, seed = 1, accessibilityL
     >
       {uri ? (
         <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
+      ) : source ? (
+        <Image source={source} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
+      ) : fallbackSource ? (
+        <Image source={fallbackSource} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
       ) : (
         <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={StyleSheet.absoluteFill}>
           <Circle cx={20} cy={20} r={7} fill={colors.surface} opacity={0.85} />

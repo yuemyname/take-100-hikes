@@ -9,7 +9,7 @@ import { colors, radii, spacing } from '@/constants';
 import { OFFICIAL_CHARACTERS } from '@/data/officialArt';
 import { authErrorMessage } from '@/features/auth/messages';
 import { useCreateCertification, useInvitableFriends, type CaptureDraft } from '@/features/certification';
-import { useMountain } from '@/features/mountains';
+import { hasVerificationCoordinates, useMountain } from '@/features/mountains';
 import { track } from '@/lib/analytics';
 
 type Params = {
@@ -54,7 +54,7 @@ export default function InviteScreen() {
     });
   };
 
-  const draft: CaptureDraft | null = mountain.data
+  const draft: CaptureDraft | null = hasVerificationCoordinates(mountain.data)
     ? {
         mountainId: mountain.data.id,
         photoUri: params.photoUri,

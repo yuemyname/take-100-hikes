@@ -1,9 +1,10 @@
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { AppText, EmptyState, LoadingSkeleton, Mascot, MountainPhoto, OFFICIAL_ART, ParticipantRow, PrimaryButton, Screen, SecondaryButton, SpeechBubble, TopBar, formatCertifiedDate } from '@/components/ui';
+import { AppText, EmptyState, LoadingSkeleton, MountainPhoto, ParticipantRow, PrimaryButton, Screen, SecondaryButton, SpeechBubble, TopBar, formatCertifiedDate } from '@/components/ui';
 import { colors, radii, spacing } from '@/constants';
-import { getMascotLook, hasOfficialMascot, PLACEHOLDER_MASCOT } from '@/data/mascots';
+import { CERTIFICATION_SUCCESS_CHARACTER } from '@/data/officialArt';
 import { isSessionSettled, useSession } from '@/features/certification';
 import { useViewerId } from '@/features/social';
 
@@ -45,7 +46,6 @@ export default function SessionScreen() {
   const settled = isSessionSettled(s.members);
   const pending = s.members.filter((m) => m.status === 'invited').length;
   const together = confirmed.length > 1;
-  const official = hasOfficialMascot(s.mountain.mascot_key);
   const me = s.members.find((m) => m.user.id === viewerId);
   const iCanJoin = me?.status === 'invited';
 
@@ -60,9 +60,13 @@ export default function SessionScreen() {
       <TopBar title="함께 인증" onBack={goBack} />
       <View style={styles.photoWrap}>
         <MountainPhoto uri={s.photoUrl ?? s.mountain.image_url} seed={s.mountain.display_order ?? 1} style={styles.photo} accessibilityLabel={`${s.mountain.name_ko} 인증 사진`} />
-        <View style={styles.mascot} pointerEvents="none">
-          <Mascot look={official ? getMascotLook(s.mountain.mascot_key) : PLACEHOLDER_MASCOT} silhouette={!official} size={OFFICIAL_ART.boxFor(110)} accessibilityLabel={official ? `${s.mountain.name_ko} 캐릭터` : '캐릭터 준비 중'} />
-        </View>
+        <Image
+          source={CERTIFICATION_SUCCESS_CHARACTER}
+          contentFit="contain"
+          style={styles.character}
+          accessibilityLabel="100PEAKS 공식 빨간 캐릭터"
+          pointerEvents="none"
+        />
       </View>
 
       <AppText variant="heading1" style={styles.title}>
@@ -97,7 +101,7 @@ const styles = StyleSheet.create({
   gap: { height: spacing.md },
   photoWrap: { borderRadius: radii.cardLarge, overflow: 'hidden', marginTop: spacing.sm, position: 'relative' },
   photo: { width: '100%', height: 220 },
-  mascot: { position: 'absolute', right: spacing.sm, bottom: -OFFICIAL_ART.boxFor(110) * OFFICIAL_ART.bottomPaddingRatio + 4 },
+  character: { position: 'absolute', width: 104, height: 146, right: spacing.sm, bottom: -12 },
   title: { marginTop: spacing.lg },
   members: {
     marginTop: spacing.lg,

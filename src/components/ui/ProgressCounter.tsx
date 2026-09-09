@@ -11,16 +11,21 @@ export interface ProgressCounterProps {
   /** Optional playful line under the number, e.g. "아직 63개나 남았는데?" */
   caption?: string;
   size?: 'md' | 'lg';
+  centered?: boolean;
 }
 
 /** The `37 / 100` hero number with a progress bar — spec §4.1, §8. */
-export function ProgressCounter({ completed, total = TOTAL_MOUNTAINS, caption, size = 'lg' }: ProgressCounterProps) {
+export function ProgressCounter({ completed, total = TOTAL_MOUNTAINS, caption, size = 'lg', centered = false }: ProgressCounterProps) {
   const safeCompleted = Math.max(0, Math.min(completed, total));
   const ratio = total > 0 ? safeCompleted / total : 0;
 
   return (
-    <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: safeCompleted }}>
-      <View style={styles.numberRow}>
+    <View
+      style={centered ? styles.centered : null}
+      accessibilityRole="progressbar"
+      accessibilityValue={{ min: 0, max: total, now: safeCompleted }}
+    >
+      <View style={[styles.numberRow, centered ? styles.numberRowCentered : null]}>
         <AppText variant={size === 'lg' ? 'displayXL' : 'displayL'}>{safeCompleted}</AppText>
         <AppText variant={size === 'lg' ? 'heading1' : 'heading2'} color="inkMuted" style={styles.total}>
           {' / '}
@@ -40,7 +45,9 @@ export function ProgressCounter({ completed, total = TOTAL_MOUNTAINS, caption, s
 }
 
 const styles = StyleSheet.create({
+  centered: { width: '100%' },
   numberRow: { flexDirection: 'row', alignItems: 'baseline' },
+  numberRowCentered: { justifyContent: 'center' },
   total: { marginLeft: spacing.xs },
   track: {
     height: 12,

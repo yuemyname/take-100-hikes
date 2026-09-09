@@ -138,7 +138,13 @@ export function ProfileBody({ user, action, showCaption = false }: ProfileBodyPr
                 accessibilityLabel={`${m.name_ko}, ${formatCertifiedDate(c.certifiedAt)} 인증${c.partySize > 1 ? ', 함께 인증 보기' : ''}`}
                 style={({ pressed }) => [styles.historyRow, pressed ? styles.pressed : null]}
               >
-                <MountainPhoto uri={m.image_url} seed={m.display_order ?? 1} radius={radii.card} style={styles.historyThumb} accessibilityLabel={`${m.name_ko} 사진`} />
+                <MountainPhoto
+                  uri={c.photoUrl ?? m.image_url}
+                  seed={m.display_order ?? 1}
+                  radius={radii.card}
+                  style={styles.historyThumb}
+                  accessibilityLabel={c.photoUrl ? `${m.name_ko} 내 인증 사진` : `${m.name_ko} 사진`}
+                />
                 <View style={styles.historyText}>
                   <AppText variant="heading3">{m.name_ko}</AppText>
                   <AppText variant="caption" color="inkMuted">
@@ -177,7 +183,7 @@ function CollectionProgressCard({ label, count, tone }: { label: string; count: 
 const styles = StyleSheet.create({
   header: { alignItems: 'center', marginTop: spacing.lg },
   avatarWrap: { position: 'relative' },
-  headerSticker: { position: 'absolute', width: 82, height: 48, right: -68, top: -12, transform: [{ rotate: '7deg' }] },
+  headerSticker: { position: 'absolute', width: 164, height: 96, right: -150, top: -24, transform: [{ rotate: '7deg' }] },
   name: { marginTop: spacing.md },
   bio: { marginTop: spacing.sm, paddingHorizontal: spacing.xl },
   counts: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.lg, gap: spacing.lg },
@@ -198,7 +204,7 @@ const styles = StyleSheet.create({
   regionTrack: { width: 96, height: 8, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, overflow: 'hidden' },
   regionFill: { height: '100%' },
   historyTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.xxxl, marginBottom: spacing.md },
-  didIt: { width: 92, height: 54, transform: [{ rotate: '5deg' }] },
+  didIt: { width: 184, height: 108, transform: [{ rotate: '5deg' }] },
   history: { gap: spacing.sm },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.surface, borderBottomWidth: 1.5, borderBottomColor: colors.border, paddingVertical: spacing.md },
   pressed: { opacity: 0.7 },
