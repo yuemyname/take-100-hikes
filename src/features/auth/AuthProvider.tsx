@@ -27,6 +27,48 @@ export interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const EMAIL_CONFIRMATION_REDIRECT_URL = 'hundredpeaks://sign-in';
+
+function getAuthCallbackParams(url: string): URLSearchParams {
+  const queryStart = url.indexOf('?');
+  const hashStart = url.indexOf('#');
+  const query =
+    queryStart >= 0
+      ? url.slice(queryStart + 1, hashStart >= 0 && hashStart > queryStart ? hashStart : undefined)
+      : '';
+  const hash = hashStart >= 0 ? url.slice(hashStart + 1) : '';
+
+  const params = new URLSearchParams(query);
+  new URLSearchParams(hash).forEach((value, key) => params.set(key, value));
+  return params;
+}
+
+async function restoreSessionFromAuthCallback(url: string): Promise<Session | null> {
+  if (!url.startsWith(EMAIL_CONFIRMATION_REDIRECT_URL)) return null;
+
+  const params = getAuthCallbackParams(url);
+  const code = params.get('code');
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  const supabase = getSupabase();
+
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) throw error;
+    return data.session;
+  }
+
+  if (accessToken && refreshToken) {
+    const { data, error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    if (error) throw error;
+    return data.session;
+  }
+
+  return null;
+}
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [status, setStatus] = useState<AuthStatus>(isSupabaseConfigured ? 'loading' : 'signedOut');
@@ -37,11 +79,42 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     const supabase = getSupabase();
     let cancelled = false;
+    const handledUrls = new Set<string>();
 
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
+    const handleAuthCallback = async (url: string) => {
+      if (handledUrls.has(url)) return;
+      handledUrls.add(url);
+
+      try {
+        const nextSession = await restoreSessionFromAuthCallback(url);
+        if (cancelled || !nextSession) return;
+        setSession(nextSession);
+        setStatus('signedIn');
+      } catch {
         if (cancelled) return;
+        setStatus('signedOut');
+      }
+    };
+
+    const urlListener = Linking.addEventListener('url', ({ url }) => {
+      void handleAuthCallback(url);
+    });
+
+    void Promise.all([supabase.auth.getSession(), Linking.getInitialURL()])
+      .then(async ([{ data }, initialUrl]) => {
+        if (cancelled) return;
+
+        if (initialUrl) {
+          const callbackSession = await restoreSessionFromAuthCallback(initialUrl);
+          if (cancelled) return;
+          if (callbackSession) {
+            handledUrls.add(initialUrl);
+            setSession(callbackSession);
+            setStatus('signedIn');
+            return;
+          }
+        }
+
         setSession(data.session);
         setStatus(data.session ? 'signedIn' : 'signedOut');
       })
@@ -57,6 +130,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     return () => {
       cancelled = true;
+      urlListener.remove();
       listener.subscription.unsubscribe();
     };
   }, []);
@@ -72,7 +146,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       password,
       options: {
         data: { username, display_name: displayName ?? username },
-        emailRedirectTo: Linking.createURL('/sign-in'),
+        // Keep email confirmation on the installed app. Linking.createURL()
+        // produces an exp:// URL inside Expo Go, which cannot open TestFlight.
+        emailRedirectTo: EMAIL_CONFIRMATION_REDIRECT_URL,
       },
     });
     if (error) throw error;
