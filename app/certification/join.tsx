@@ -9,6 +9,7 @@ import { authErrorMessage } from '@/features/auth/messages';
 import { useRespondToInvitation, useSession, useSummitProximity } from '@/features/certification';
 import { hasVerificationCoordinates } from '@/features/mountains';
 import { useViewerId } from '@/features/social';
+import { env } from '@/lib/env';
 import { getDistanceMeters } from '@/lib/geo';
 
 /**
@@ -24,8 +25,8 @@ export default function JoinScreen() {
   const respond = useRespondToInvitation();
   const proximity = useSummitProximity(session.data?.mountain);
 
-  // Development-only helper. React Native removes this branch from Release builds.
-  const testMode = __DEV__;
+  // Enabled only in local development and the isolated TestFlight build profile.
+  const locationTestMode = __DEV__ || env.locationTestModeEnabled;
   const [demoAtSummit, setDemoAtSummit] = useState(false);
 
   const mountain = session.data?.mountain;
@@ -138,11 +139,16 @@ export default function JoinScreen() {
           ) : proximity.permission === 'denied' && !demoAtSummit ? (
             <SecondaryButton label="설정 열기" onPress={() => Linking.openSettings().catch(() => {})} />
           ) : null}
-          {testMode ? (
-            <SecondaryButton
-              label={demoAtSummit ? '실제 위치 사용' : '테스트: 정상 위치로 보정'}
-              onPress={() => setDemoAtSummit((value) => !value)}
-            />
+          {locationTestMode ? (
+            <View style={styles.testLocation}>
+              <AppText variant="caption" color="inkMuted" align="center">
+                TestFlight 위치 테스트 · 검증된 정상 좌표만 사용해요
+              </AppText>
+              <SecondaryButton
+                label={demoAtSummit ? '실제 위치 사용' : '테스트: 정상 위치로 보정'}
+                onPress={() => setDemoAtSummit((value) => !value)}
+              />
+            </View>
           ) : null}
         </View>
         {respond.isError ? (
@@ -177,6 +183,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   banner: { marginTop: spacing.lg, gap: spacing.sm },
+  testLocation: { gap: spacing.xs },
   error: { marginTop: spacing.md },
   footer: {
     position: 'absolute',

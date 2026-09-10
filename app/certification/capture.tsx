@@ -10,6 +10,7 @@ import { colors, MIN_TOUCH_TARGET, radii, spacing } from '@/constants';
 import { useSummitProximity } from '@/features/certification';
 import { hasVerificationCoordinates, useMountain } from '@/features/mountains';
 import { track } from '@/lib/analytics';
+import { env } from '@/lib/env';
 import { getDistanceMeters } from '@/lib/geo';
 
 /**
@@ -28,8 +29,9 @@ export default function CaptureScreen() {
   const [capturing, setCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
 
-  // Development-only helper. React Native removes this branch from Release builds.
-  const testMode = __DEV__;
+  // The store profile never enables this. The isolated TestFlight profile may
+  // simulate only a verified summit coordinate while keeping camera capture real.
+  const locationTestMode = __DEV__ || env.locationTestModeEnabled;
   const [demoAtSummit, setDemoAtSummit] = useState(false);
   const verificationMountain = hasVerificationCoordinates(mountain.data) ? mountain.data : null;
 
@@ -76,7 +78,7 @@ export default function CaptureScreen() {
       if (cameraRef.current && cameraPermission?.granted) {
         const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
         photoUri = photo?.uri ?? null;
-      } else if (testMode) {
+      } else if (__DEV__) {
         photoUri = Image.resolveAssetSource(require('../../assets/photos/home-hero.png')).uri;
       }
       if (!photoUri) throw new Error('사진을 찍지 못했어요.');
@@ -147,7 +149,7 @@ export default function CaptureScreen() {
   }
   const cameraDenied = cameraPermission !== null && !cameraPermission.granted && !cameraPermission.canAskAgain;
   const cameraAvailable = Boolean(cameraPermission?.granted);
-  const canShoot = eligible && !capturing && (cameraAvailable ? cameraReady : testMode);
+  const canShoot = eligible && !capturing && (cameraAvailable ? cameraReady : __DEV__);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -243,10 +245,10 @@ export default function CaptureScreen() {
         <AppText variant="caption" color="inkMuted" align="center">
           {eligible ? '정상이 보이게 찍어주세요' : '정상 반경 안에 들어오면 촬영할 수 있어요'}
         </AppText>
-        {testMode ? (
+        {locationTestMode ? (
           <View style={styles.demo}>
             <AppText variant="caption" color="inkMuted">
-              개발용 위치 보정 · Release 빌드에서는 숨겨져요
+              TestFlight 위치 테스트 · 검증된 정상 좌표만 사용해요
             </AppText>
             <SecondaryButton
               label={demoAtSummit ? '실제 위치 사용' : '테스트: 정상 위치로 보정'}

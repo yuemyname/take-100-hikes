@@ -7,8 +7,18 @@
     "preview": {
       "distribution": "internal"
     },
+    "testflight": {
+      "distribution": "store",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENABLE_LOCATION_TEST_MODE": "true"
+      }
+    },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENABLE_LOCATION_TEST_MODE": "false"
+      }
     }
   },
   "submit": {

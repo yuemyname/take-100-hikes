@@ -12,7 +12,7 @@ jobs:
     type: build
     params:
       platform: ios
-      profile: production
+      profile: testflight
     hooks:
       after_install_node_modules:
         - name: TypeScript check
