@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { unregisterCurrentPushToken } from '@/features/notifications/push';
 
 export type AuthStatus = 'loading' | 'signedOut' | 'signedIn' | 'guest';
 
@@ -157,6 +158,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const signOut = useCallback(async () => {
     if (isSupabaseConfigured) {
+      await unregisterCurrentPushToken().catch(() => {
+        // Signing out must still work if the device is offline. A token is
+        // reassigned safely by register_push_token on the next signed-in user.
+      });
       const { error } = await getSupabase().auth.signOut();
       if (error) throw error;
     }

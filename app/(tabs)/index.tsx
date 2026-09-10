@@ -23,6 +23,7 @@ import {
   usePrimaryCollection,
 } from '@/features/collections';
 import { useCompletedMountainIds, useMountains } from '@/features/mountains';
+import { useUnreadNotificationCount } from '@/features/notifications';
 import { useProfile, useViewerId } from '@/features/social';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
@@ -45,6 +46,7 @@ export default function HomeScreen() {
   const mountains = useMountains();
   const completedQuery = useCompletedMountainIds();
   const invitations = useMyInvitations();
+  const unreadNotifications = useUnreadNotificationCount();
   const respond = useRespondToInvitation();
   const { id: collectionId, collection } = usePrimaryCollection();
 
@@ -92,9 +94,26 @@ export default function HomeScreen() {
         <TopBar
           wordmark
           right={
-            <Pressable onPress={() => router.push('/profile')} accessibilityRole="button" accessibilityLabel="내 프로필" hitSlop={8}>
-              <Avatar uri={profile.data?.avatar_url} name={displayName} size="md" />
-            </Pressable>
+            <View style={styles.headerActions}>
+              <Pressable
+                onPress={() => router.push('/notifications' as Href)}
+                accessibilityRole="button"
+                accessibilityLabel={`알림${(unreadNotifications.data ?? 0) > 0 ? `, 읽지 않은 알림 ${unreadNotifications.data}개` : ''}`}
+                style={styles.notificationButton}
+              >
+                <MaterialCommunityIcons name="bell-outline" size={25} color={colors.ink} />
+                {(unreadNotifications.data ?? 0) > 0 ? (
+                  <View style={styles.notificationBadge}>
+                    <AppText variant="caption" color="surface" weight="700">
+                      {(unreadNotifications.data ?? 0) > 99 ? '99+' : unreadNotifications.data}
+                    </AppText>
+                  </View>
+                ) : null}
+              </Pressable>
+              <Pressable onPress={() => router.push('/profile')} accessibilityRole="button" accessibilityLabel="내 프로필" hitSlop={8}>
+                <Avatar uri={profile.data?.avatar_url} name={displayName} size="md" />
+              </Pressable>
+            </View>
           }
         />
       </View>
@@ -204,6 +223,25 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   screenContent: { paddingBottom: 0 },
   titleHeader: { paddingHorizontal: spacing.xl, backgroundColor: colors.background },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  notificationButton: {
+    width: MIN_TOUCH_TARGET,
+    height: MIN_TOUCH_TARGET,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 1,
+    right: 0,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: colors.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   heroStage: {
     position: 'relative',
     overflow: 'hidden',

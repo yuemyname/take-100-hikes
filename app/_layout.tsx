@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants';
 import { AuthProvider, useAuth } from '@/features/auth';
+import { NotificationBridge } from '@/features/notifications';
 import { appFonts } from '@/lib/fonts';
 import { queryClient } from '@/lib/queryClient';
 
@@ -44,6 +45,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="certification/invite" />
         <Stack.Screen name="certification/join" />
         <Stack.Screen name="certification/session/[id]" />
+        <Stack.Screen name="notifications" />
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="(auth)" />
@@ -64,6 +66,7 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <StatusBar style="dark" />
+            <NotificationBridge />
             <RootNavigator fontsReady={fontsReady} />
           </AuthProvider>
         </QueryClientProvider>

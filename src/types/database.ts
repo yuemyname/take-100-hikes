@@ -6,6 +6,7 @@ export type CertificationSessionStatus = 'active' | 'completed' | 'cancelled';
 export type CertificationMemberStatus = 'invited' | 'confirmed' | 'declined' | 'expired';
 export type CollectionId = 'forest_service_100' | 'bac_100';
 export type CoordinateStatus = 'pending' | 'verified' | 'retired';
+export type SocialNotificationType = 'new_follower' | 'mutual_follow';
 
 export interface Profile {
   id: string;
@@ -72,6 +73,27 @@ export interface CollectionMountain {
 export interface Follow {
   follower_id: string;
   following_id: string;
+  created_at: string;
+}
+
+export interface PushToken {
+  id: string;
+  user_id: string;
+  expo_push_token: string;
+  platform: 'ios' | 'android';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SocialNotification {
+  id: string;
+  user_id: string;
+  actor_id: string | null;
+  type: SocialNotificationType;
+  title: string;
+  body: string;
+  data: Record<string, unknown>;
+  read_at: string | null;
   created_at: string;
 }
 
