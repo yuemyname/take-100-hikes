@@ -19,6 +19,7 @@ import { useAuth } from '@/features/auth';
 import {
   enablePushNotifications,
   getPushPermissionState,
+  notificationHref,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useNotifications,
@@ -73,7 +74,10 @@ export default function NotificationsScreen() {
 
   const openNotification = (item: NotificationItem) => {
     if (!item.read_at) markRead.mutate(item.id);
-    if (item.actor_id) {
+    const route = notificationHref(item.data.url);
+    if (route) {
+      router.push(route);
+    } else if (item.actor_id) {
       router.push({ pathname: '/user/[id]', params: { id: item.actor_id } });
     }
   };

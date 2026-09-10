@@ -1,5 +1,6 @@
 export { NotificationBridge } from './NotificationBridge';
 export { enablePushNotifications, getPushPermissionState } from './push';
+export { notificationHref } from './routing';
 export {
   notificationKeys,
   useMarkAllNotificationsRead,

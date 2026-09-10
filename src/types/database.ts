@@ -6,7 +6,7 @@ export type CertificationSessionStatus = 'active' | 'completed' | 'cancelled';
 export type CertificationMemberStatus = 'invited' | 'confirmed' | 'declined' | 'expired';
 export type CollectionId = 'forest_service_100' | 'bac_100';
 export type CoordinateStatus = 'pending' | 'verified' | 'retired';
-export type SocialNotificationType = 'new_follower' | 'mutual_follow';
+export type SocialNotificationType = 'new_follower' | 'mutual_follow' | 'certification_invite';
 
 export interface Profile {
   id: string;

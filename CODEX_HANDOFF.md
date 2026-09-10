@@ -97,8 +97,9 @@
 ### 2026-09-10 팔로우·맞팔 알림 반영
 
 - `0011_social_notifications.sql`이 사용자별 인앱 알림 기록과 Expo 푸시 토큰을 추가한다. 새 팔로우가 생성되면 DB 트리거가 `new_follower` 또는 `mutual_follow` 알림을 한 번 생성한다.
+- `0012_certification_invite_notifications.sql`이 실제 공동 인증 초대마다 `certification_invite` 알림을 한 번 생성한다. 적용 시점에 응답 가능한 기존 초대도 중복 없이 소급 반영한다.
 - 알림과 기기 토큰은 소유자 전용 RLS로 보호한다. 토큰 등록 RPC는 항상 현재 `auth.uid()`에 바인딩하며, 로그아웃할 때 현재 기기의 토큰을 제거한다.
-- 홈 헤더의 종 아이콘에서 알림 목록, 읽지 않은 개수, 모두 읽기, iPhone 알림 권한 설정을 확인할 수 있다. 푸시 또는 인앱 알림을 누르면 팔로우한 사용자의 프로필로 이동한다.
+- 홈 헤더의 종 아이콘에서 알림 목록, 읽지 않은 개수, 모두 읽기, iPhone 알림 권한 설정을 확인할 수 있다. 팔로우 알림은 상대 프로필로, 공동 인증 알림은 해당 참여 화면으로 이동한다.
 - 연결된 원격 Supabase에 `0011`이 적용됐고, EAS의 `com.hundredpeaks.app`에 Apple Push Notifications 키가 연결됐다.
 - Expo Push Service의 전송 영수증 확인 및 영구적으로 만료된 토큰 자동 정리는 아직 후속 운영 작업이다.
 

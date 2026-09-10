@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { useRouter, type Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect } from 'react';
 import { Platform } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
@@ -8,12 +8,8 @@ import { useAuth } from '@/features/auth';
 
 import { markNotificationRead } from './api';
 import { refreshRegisteredPushToken } from './push';
+import { notificationHref } from './routing';
 
-function safeNotificationRoute(value: unknown): Href | null {
-  if (typeof value !== 'string') return null;
-  if (/^\/user\/[0-9a-f-]{36}$/i.test(value)) return value as Href;
-  return null;
-}
 export function NotificationBridge() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -24,7 +20,7 @@ export function NotificationBridge() {
       if (status !== 'signedIn' || !user) return;
       const data = response.notification.request.content.data;
       const notificationId = data?.notificationId;
-      const route = safeNotificationRoute(data?.url);
+      const route = notificationHref(data?.url);
 
       if (typeof notificationId === 'string') {
         void markNotificationRead(user.id, notificationId).finally(() => {
