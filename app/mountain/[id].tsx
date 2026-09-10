@@ -93,6 +93,7 @@ export default function MountainDetailScreen() {
       ? `${area}에 있는 ${altitude}의 산이에요. 정상 반경 ${m.verification_radius_m}m 안에서 인증할 수 있어요.`
       : `${area}에 있는 ${altitude}의 산이에요. GPS 인증지는 현재 검증 중이에요.`);
   const bubble = completed ? `${m.name_ko} 접수 완료!` : '여긴 좀 가보고 싶은데?';
+  const heroDecorationTop = insets.top + MIN_TOUCH_TARGET + spacing.lg;
 
   return (
     <View style={styles.safe}>
@@ -116,11 +117,11 @@ export default function MountainDetailScreen() {
           <Image
             source={completed ? OFFICIAL_STICKERS.summitCheck : OFFICIAL_STICKERS.thisIsWhyIHike}
             contentFit="contain"
-            style={styles.heroSticker}
+            style={[styles.heroSticker, { top: heroDecorationTop }]}
             accessibilityLabel={completed ? '정상 접수 완료 그래픽' : '이 맛에 등산함 그래픽'}
           />
 
-          <View style={styles.heroBubble} pointerEvents="none">
+          <View style={[styles.heroBubble, { top: heroDecorationTop }]} pointerEvents="none">
             <SpeechBubble text={bubble} tone="surface" tailPosition="right" />
           </View>
 
@@ -350,12 +351,11 @@ const styles = StyleSheet.create({
   heroSticker: {
     position: 'absolute',
     left: spacing.md,
-    top: 88,
     width: 112,
     height: 74,
     transform: [{ rotate: '-7deg' }],
   },
-  heroBubble: { position: 'absolute', right: spacing.lg, top: 92, maxWidth: 188 },
+  heroBubble: { position: 'absolute', right: spacing.lg, maxWidth: 188 },
   heroCharacter: {
     position: 'absolute',
     right: -22,
