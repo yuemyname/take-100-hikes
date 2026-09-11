@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import {
   AppText,
@@ -69,6 +69,7 @@ export default function EditProfileScreen() {
 }
 
 function ProfileEditor({ profile, email, onBack }: { profile: Profile; email?: string; onBack: () => void }) {
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const update = useUpdateProfile();
   const [username, setUsername] = useState(profile.username);
   const [displayName, setDisplayName] = useState(profile.display_name ?? profile.username);
@@ -123,6 +124,7 @@ function ProfileEditor({ profile, email, onBack }: { profile: Profile; email?: s
   const avatarUri = avatar === undefined ? profile.avatar_url : avatar?.uri ?? null;
   const backgroundUri = homeBackground === undefined ? profile.home_background_url : homeBackground?.uri ?? null;
   const formError = update.isError ? authErrorMessage(update.error) : null;
+  const homeHeroAspectRatio = windowWidth / Math.max(620, windowHeight - 64);
 
   return (
     <Screen>
@@ -181,13 +183,21 @@ function ProfileEditor({ profile, email, onBack }: { profile: Profile; email?: s
           <AppText variant="heading3">홈 산 배경</AppText>
           <AppText variant="caption" color="inkMuted">홈의 캐릭터와 메뉴 뒤에 보이는 사진이에요.</AppText>
         </View>
-        <View style={styles.backgroundPreview} accessibilityRole="image" accessibilityLabel="홈 산 배경 미리보기">
+        <View
+          style={[styles.backgroundPreview, { aspectRatio: homeHeroAspectRatio }]}
+          accessibilityRole="image"
+          accessibilityLabel="홈 산 배경 적용 미리보기"
+        >
           <Image
             source={backgroundUri ? { uri: backgroundUri } : DEFAULT_HOME_BACKGROUND}
             contentFit="cover"
+            contentPosition="center"
             style={StyleSheet.absoluteFill}
           />
         </View>
+        <AppText variant="caption" color="inkMuted" align="center">
+          현재 기기의 홈 화면과 같은 비율로 보여드려요.
+        </AppText>
         <View style={styles.mediaButtons}>
           <SecondaryButton label="배경 사진 선택" fullWidth={false} onPress={() => pickImage('homeBackground')} />
           {backgroundUri ? (
@@ -225,7 +235,13 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.cardLarge,
   },
-  backgroundPreview: { height: 260, borderRadius: radii.card, overflow: 'hidden', backgroundColor: colors.ink },
+  backgroundPreview: {
+    width: '72%',
+    alignSelf: 'center',
+    borderRadius: radii.card,
+    overflow: 'hidden',
+    backgroundColor: colors.ink,
+  },
   error: { marginTop: spacing.lg },
   save: { marginTop: spacing.xxl },
 });
