@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppText, CollectionSwitcher, EmptyState, LoadingSkeleton, MountainCard, Pill, SearchField, TopBar } from '@/components/ui';
+import { MountainMap } from '@/components/mountains';
+import { AppText, CollectionSwitcher, EmptyState, LoadingSkeleton, MountainCard, Pill, SearchField, SegmentedControl, TopBar } from '@/components/ui';
 import { spacing, colors } from '@/constants';
 import { BAC_PENDING_COUNT, completedCountForCollection, mountainsForCollection, usePrimaryCollection } from '@/features/collections';
 import {
@@ -18,9 +19,16 @@ import { useCompletedMountains, useViewerId } from '@/features/social';
 import type { Mountain } from '@/types';
 
 const DEFAULT_MOUNTAIN_PHOTO = require('../../assets/photos/home-hero.png');
+const VIEW_OPTIONS = [
+  { key: 'list', label: '리스트' },
+  { key: 'map', label: '지도' },
+] as const;
+
+type CatalogView = (typeof VIEW_OPTIONS)[number]['key'];
 
 export default function MountainsScreen() {
   const router = useRouter();
+  const [catalogView, setCatalogView] = useState<CatalogView>('list');
   const [filter, setFilter] = useState<MountainFilter>('all');
   const [region, setRegion] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -56,6 +64,41 @@ export default function MountainsScreen() {
     collectionMountains.forEach((m, i) => map.set(m.id, i + 1));
     return map;
   }, [collectionMountains]);
+
+  const mapContent = catalogView === 'map' ? (() => {
+    if (mountains.isLoading || completedQuery.isLoading) {
+      return (
+        <View style={styles.mapState}>
+          <LoadingSkeleton height={520} radius={24} />
+        </View>
+      );
+    }
+
+    if (mountains.isError || completedQuery.isError) {
+      return (
+        <View style={styles.mapState}>
+          <EmptyState
+            mascot={false}
+            title="지도를 불러오지 못했어요"
+            description="잠깐 연결이 끊겼어요. 다시 시도해주세요."
+            actionLabel="다시 시도"
+            onAction={() => {
+              mountains.refetch();
+              completedQuery.refetch();
+            }}
+          />
+        </View>
+      );
+    }
+
+    return (
+      <MountainMap
+        mountains={visible}
+        completedIds={completed}
+        onPressMountain={(id) => router.push({ pathname: '/mountain/[id]', params: { id } })}
+      />
+    );
+  })() : null;
 
   const header = (
     <View style={styles.header}>
@@ -99,6 +142,10 @@ export default function MountainsScreen() {
         <AppText variant="bodySmall" color="inkMuted">{visible.length}개의 산</AppText>
         <AppText variant="bodySmall" color="inkMuted">{collection.shortName} {collectionDone} / 100</AppText>
       </View>
+      <View style={styles.viewSwitch}>
+        <SegmentedControl options={VIEW_OPTIONS} value={catalogView} onChange={setCatalogView} />
+      </View>
+      {catalogView === 'map' ? mapContent : null}
     </View>
   );
 
@@ -148,13 +195,13 @@ export default function MountainsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <FlatList
-        data={visible}
+        data={catalogView === 'list' ? visible : []}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         numColumns={2}
         columnWrapperStyle={styles.row}
         ListHeaderComponent={header}
-        ListEmptyComponent={renderEmpty}
+        ListEmptyComponent={catalogView === 'list' ? renderEmpty : null}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -177,6 +224,8 @@ const styles = StyleSheet.create({
   filters: { gap: spacing.sm, paddingVertical: spacing.xs },
   search: { marginTop: spacing.md },
   summary: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md },
+  viewSwitch: { marginTop: spacing.md },
+  mapState: { marginTop: spacing.md, marginBottom: spacing.huge },
   row: { gap: spacing.md },
   cell: { flex: 1, marginBottom: spacing.md },
   skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },

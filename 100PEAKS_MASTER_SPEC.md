@@ -1166,6 +1166,19 @@ Agents MUST follow this implementation order unless the user explicitly changes 
 5. micro-interactions
 6. accessibility pass
 
+### Phase 7 — Discovery and hiking activity extensions
+
+User-approved post-MVP direction as of 2026-09-11. Detailed privacy, data, and ranking rules are in `docs/POST_MVP_DISCOVERY_ACTIVITY.md`.
+
+1. mountain catalog list/map presentation
+2. separate public mountain display/trailhead locations from certification points
+3. nearby restaurant discovery through a server-side provider integration
+4. private hiking activity records and visibility controls
+5. read-only Apple HealthKit workout import on iOS
+6. server-computed, opt-in pace ranking for eligible certified activities
+
+These extensions do not relax GPS verification, mutual-friend shared-certification, collection, or privacy rules. HealthKit permission denial must not block certification, and exact verification points or raw workout routes must not appear in public UI.
+
 ---
 
 # 20. Screen-level visual acceptance test
