@@ -24,7 +24,7 @@ Rules:
 - never print or expose an exact certification coordinate,
 - use a separate public display location when that model is available.
 
-The first implementation rounds existing eligible mountain coordinates to two decimal places before rendering a pin. This is an approximate, kilometre-level catalog location, not a certification target. Pending BAC verification points remain excluded.
+The current implementation asks for foreground location only when the user opens the map, defaults to a 50km radius, and lets the user choose 10/30/50/100km. It keeps the map centered on the user's location, stores no user coordinate, and shows only filtered mountains inside the selected radius. Existing eligible mountain coordinates are rounded to two decimal places before rendering a pin. This is an approximate, kilometre-level catalog location, not a certification target. Pending BAC verification points remain excluded.
 
 Native maps use `react-native-maps`, which uses Apple Maps or Google Maps on iOS and Google Maps on Android. The web build keeps a safe fallback until a web map provider is selected. See the [Expo map documentation](https://docs.expo.dev/versions/latest/sdk/map-view/).
 
