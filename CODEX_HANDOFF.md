@@ -82,7 +82,8 @@
 - 현재 산 정체성은 합계 121개이며 두 컬렉션은 각각 100개, 교집합 79개, 각 차집합 21개다.
 - `0008_complete_collection_memberships.sql`과 `supabase/seed.sql`이 명시적 slug로 200개 멤버십을 구성하고 서버에서 최종 개수를 검증한다.
 - 연결된 `100hikes` Supabase 프로젝트에 `0001`–`0008`과 seed를 적용했다. 적용 직후 원격 통계는 `mountains=121`, `collections=2`, `collection_mountains=200`이다.
-- BAC 100개 인증지 좌표는 여전히 검증되지 않았다. `verification_points`는 비어 있고, BAC 전용 21개 및 깃대봉의 레거시 GPS 필드는 `null`이다.
+- BAC 100개 인증지 좌표는 여전히 검증되지 않았다. `0013_seed_bac_verification_points.sql`이 BAC 인증지명 100개를 `verification_points`에 `pending`으로 만들고 모든 BAC 멤버십에 연결했으며, 좌표와 반경은 전부 `null`이다. BAC 전용 21개 및 깃대봉의 레거시 GPS 필드도 `null`이다.
+- 연결된 원격 Supabase에 `0013`까지 적용됐다. 마이그레이션 내부 검증에서 BAC 인증지 소스 100개, 멤버십 정체성 매칭 100개, 연결 100개, distinct 인증지 100개, GPS 값이 들어간 pending 인증지 0개를 확인했다.
 
 ### 2026-09-09 인증 사진·프로필 편집 반영
 
@@ -161,7 +162,7 @@ certification_sessions + certification_members
 - 클라이언트의 `src/features/collections/index.ts`에는 BAC 100 이름 집합이 있고, 기존 산림청 데이터와 이름을 맞춰 79개를 임시로 BAC 도감에 보여준다.
 - `BAC_CONNECTED_COUNT = 100`, `BAC_PENDING_COUNT = 21`이 현재 UI 안내에 사용된다.
 - DB의 `bac_100` `collection_mountains` 멤버십은 명시적 slug 매핑으로 100개가 시드되어 있다.
-- **DB에는 아직 BAC `verification_points`가 시드되지 않았다.**
+- DB의 BAC `verification_points` 100개는 인증지명만 시드되어 각 `bac_100` 멤버십에 연결됐다. 모두 `coordinate_status='pending'`이고 위도·경도·반경은 `null`이다.
 - BAC 전용 21개 도전 대상은 정식 산 정체성으로 연결되어 있다. 기존 오서산 정체성은 재사용하고 나머지 BAC 전용 산을 추가했다.
 - 따라서 BAC 목록 100개와 DB 멤버십은 완료됐지만, GPS 인증은 인증지 시드·좌표 검증 전까지 완료된 것이 아니다.
 
@@ -246,7 +247,7 @@ certification_sessions + certification_members
 
 기존 Phase 1–5를 다시 만들지 않는다. 현재 가장 먼저 막힌 것은 BAC 100의 안전한 데이터 완성 및 새 인증지 모델 연결이다.
 
-2026-09-09 기준으로 1–3번은 완료됐다. 다음 구현은 4번부터 시작한다.
+2026-09-11 기준으로 1–4번은 완료됐다. 다음 구현은 5번부터 시작한다.
 
 ### 1) BAC 100 원본 목록과 산 정체성 잠금 — 완료
 
@@ -269,7 +270,7 @@ certification_sessions + certification_members
 - BAC 공식 순서 1–100을 `display_order`로 저장한다.
 - 산림청 100 멤버십도 정확히 100개인지 검증하고 두 컬렉션의 교집합 79, 각 차집합 21을 자동 검사한다.
 
-### 4) BAC 인증지 100개를 `verification_points`로 시드
+### 4) BAC 인증지 100개를 `verification_points`로 시드 — 완료
 
 - CSV의 인증지명으로 산과 인증지 레코드를 분리한다.
 - 확인 전에는 좌표를 `null`, 상태를 `pending`으로 유지한다.
@@ -365,4 +366,4 @@ Phase/목표:
 데이터 출처와 좌표 상태:
 ```
 
-첫 구현은 위 **8. 다음 구현 우선순위**의 4번부터 시작한다. 이미 완료된 Phase 1–5와 우선순위 1–3을 재작성하거나, 화면만 100개처럼 보이게 만들어 데이터 공백을 숨기지 않는다.
+첫 구현은 위 **8. 다음 구현 우선순위**의 5번부터 시작한다. 이미 완료된 Phase 1–5와 우선순위 1–4를 재작성하거나, 화면만 100개처럼 보이게 만들어 데이터 공백을 숨기지 않는다.

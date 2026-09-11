@@ -13,6 +13,13 @@ const COLLECTION_MIGRATION_PATH = path.join(
   'migrations',
   '0008_complete_collection_memberships.sql',
 );
+const VERIFICATION_POINT_MIGRATION_PATH = path.join(
+  __dirname,
+  '..',
+  'supabase',
+  'migrations',
+  '0013_seed_bac_verification_points.sql',
+);
 const SEED_PATH = path.join(__dirname, '..', 'supabase', 'seed.sql');
 const EXPECTED_HEADERS = [
   'order',
@@ -170,6 +177,7 @@ for (const [name, expected] of Object.entries(LOCKED_CASES)) {
 const mountains = JSON.parse(fs.readFileSync(MOUNTAINS_PATH, 'utf8'));
 const migration = fs.readFileSync(MIGRATION_PATH, 'utf8');
 const collectionMigration = fs.readFileSync(COLLECTION_MIGRATION_PATH, 'utf8');
+const verificationPointMigration = fs.readFileSync(VERIFICATION_POINT_MIGRATION_PATH, 'utf8');
 const seedSql = fs.readFileSync(SEED_PATH, 'utf8');
 assert(mountains.length === 121, `Expected 121 mountain identities across both collections; found ${mountains.length}.`);
 assert(new Set(mountains.map((mountain) => mountain.slug)).size === mountains.length, 'Mountain slugs must be unique.');
@@ -217,23 +225,65 @@ assert(
   'Gitdaebong migration must pin its stable UUID.',
 );
 
-const forestSeedRows = seedSql.match(/^  \('forest_service_100', '[^']+', \d+, '산림청 100대 명산'\)[,;]?$/gm) ?? [];
-const bacSeedRows = seedSql.match(/^  \('bac_100', '[^']+', \d+, '[^']+'\)[,;]?$/gm) ?? [];
+const forestSeedRows = seedSql.match(/^  \('forest_service_100', '[^']+', \d+, '산림청 100대 명산', null\)[,;]?$/gm) ?? [];
+const bacSeedRows = [...seedSql.matchAll(/^  \('bac_100', '([^']+)', (\d+), '([^']+)', '([^']+)'\)[,;]?$/gm)];
 assert(forestSeedRows.length === 100, `Expected 100 Forestry seed memberships; found ${forestSeedRows.length}.`);
 assert(bacSeedRows.length === 100, `Expected 100 BAC seed memberships; found ${bacSeedRows.length}.`);
 assert(
-  seedSql.includes("('forest_service_100', 'gitdaebong-hongdo', 69, '산림청 100대 명산')"),
+  seedSql.includes("('forest_service_100', 'gitdaebong-hongdo', 69, '산림청 100대 명산', null)"),
   'Forestry membership must include Gitdaebong.',
 );
 assert(
-  !seedSql.includes("('forest_service_100', 'oseosan', 69, '산림청 100대 명산')"),
+  !seedSql.includes("('forest_service_100', 'oseosan', 69, '산림청 100대 명산', null)"),
   'Forestry membership must exclude the legacy Oseosan substitution.',
 );
 assert(
-  seedSql.includes("('bac_100', 'oseosan', 55, '오서산(보령)')"),
-  'BAC membership must include Oseosan at staging order 55.',
+  seedSql.includes("('bac_100', 'oseosan', 55, '오서산(보령)', '정상')"),
+  'BAC membership must include Oseosan and its pending checkpoint at staging order 55.',
+);
+
+const migrationPointRows = [
+  ...verificationPointMigration.matchAll(/^  \((\d+), '([^']+)', '([^']+)'\)[,;]?$/gm),
+];
+assert(migrationPointRows.length === 100, `Expected 100 BAC verification-point migration rows; found ${migrationPointRows.length}.`);
+
+for (const [index, row] of rows.entries()) {
+  const migrationPoint = migrationPointRows[index];
+  assert(Number(migrationPoint?.[1]) === Number(row.order), `${row.mountain_name}: migration order mismatch.`);
+  assert(migrationPoint?.[2] === row.mountain_name, `${row.mountain_name}: migration identity label mismatch.`);
+  assert(migrationPoint?.[3] === row.verification_point, `${row.mountain_name}: migration checkpoint mismatch.`);
+
+  const seedPoint = bacSeedRows[index];
+  assert(Number(seedPoint?.[2]) === Number(row.order), `${row.mountain_name}: seed order mismatch.`);
+  assert(seedPoint?.[3] === row.mountain_name, `${row.mountain_name}: seed identity label mismatch.`);
+  assert(seedPoint?.[4] === row.verification_point, `${row.mountain_name}: seed checkpoint mismatch.`);
+}
+
+assert(
+  verificationPointMigration.includes('alter column verification_radius_m drop not null'),
+  'Pending verification-point radii must be nullable.',
+);
+assert(
+  verificationPointMigration.includes("or (latitude is null and longitude is null and verification_radius_m is null)"),
+  'Pending verification points must fail closed with null GPS fields.',
+);
+assert(
+  verificationPointMigration.includes('latitude is not null') &&
+    verificationPointMigration.includes('longitude is not null') &&
+    verificationPointMigration.includes('verification_radius_m is not null') &&
+    verificationPointMigration.includes("and nullif(trim(source_note), '') is not null"),
+  'Verified verification points must require complete GPS fields and a source note.',
+);
+assert(
+  verificationPointMigration.includes("null,\n  null,\n  null,\n  'pending'"),
+  'BAC verification-point migration must insert null coordinates/radius as pending.',
+);
+assert(
+  seedSql.includes('on conflict (mountain_id, name_ko) do nothing;') &&
+    seedSql.includes('left join public.verification_points point'),
+  'Generated seed must preserve existing verified points and reconnect BAC memberships.',
 );
 
 console.log(
-  'Collection data audit passed: 121 mountain identities, Forestry 100, BAC 100, 79 shared, 21 per-collection differences, pending GPS preserved.',
+  'Collection data audit passed: 121 mountain identities, Forestry 100, BAC 100, 100 pending BAC checkpoints linked, GPS fields null.',
 );

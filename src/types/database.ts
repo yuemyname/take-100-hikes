@@ -55,7 +55,8 @@ export interface VerificationPoint {
   name_ko: string;
   latitude: number | null;
   longitude: number | null;
-  verification_radius_m: number;
+  /** Null until this named point's radius has been independently verified. */
+  verification_radius_m: number | null;
   coordinate_status: CoordinateStatus;
   source_note: string | null;
   created_at: string;

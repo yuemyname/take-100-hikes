@@ -97,12 +97,14 @@ function buildMemberships() {
       slug: mountain.slug,
       displayOrder: mountain.display_order,
       sourceLabel: '산림청 100대 명산',
+      verificationPointName: null,
     }));
   forestMemberships.push({
     collectionId: 'forest_service_100',
     slug: gitdaebong.slug,
     displayOrder: 69,
     sourceLabel: '산림청 100대 명산',
+    verificationPointName: null,
   });
   forestMemberships.sort((a, b) => a.displayOrder - b.displayOrder);
 
@@ -118,6 +120,7 @@ function buildMemberships() {
       slug,
       displayOrder: Number(row.order),
       sourceLabel: row.mountain_name,
+      verificationPointName: row.verification_point,
     };
   });
 
@@ -146,7 +149,7 @@ const rows = mountains.map(
 const memberships = buildMemberships();
 const membershipRows = memberships.map(
   (membership) =>
-    `  (${q(membership.collectionId)}, ${q(membership.slug)}, ${n(membership.displayOrder)}, ${q(membership.sourceLabel)})`,
+    `  (${q(membership.collectionId)}, ${q(membership.slug)}, ${n(membership.displayOrder)}, ${q(membership.sourceLabel)}, ${q(membership.verificationPointName)})`,
 );
 
 const membershipSql = `-- Collection membership is derived from the audited source identities, never name-matched in SQL.
@@ -155,12 +158,44 @@ create temporary table collection_membership_seed (
   collection_id text not null,
   mountain_slug text not null,
   display_order integer not null,
-  source_label text not null
+  source_label text not null,
+  verification_point_name text
 ) on commit drop;
 
-insert into collection_membership_seed (collection_id, mountain_slug, display_order, source_label)
+insert into collection_membership_seed (
+  collection_id,
+  mountain_slug,
+  display_order,
+  source_label,
+  verification_point_name
+)
 values
 ${membershipRows.join(',\n')};
+
+-- BAC checkpoint names are safe to seed, but coordinates and radii are not.
+-- Existing verified points are preserved when this seed is rerun.
+insert into public.verification_points (
+  mountain_id,
+  name_ko,
+  latitude,
+  longitude,
+  verification_radius_m,
+  coordinate_status,
+  source_note
+)
+select
+  mountain.id,
+  seed.verification_point_name,
+  null,
+  null,
+  null,
+  'pending',
+  'BAC 명산100 공개 목록의 인증지명(2026-09-08 확인). GPS 좌표와 인증 반경은 미검증.'
+from collection_membership_seed seed
+join public.mountains mountain on mountain.slug = seed.mountain_slug
+where seed.collection_id = 'bac_100'
+  and seed.verification_point_name is not null
+on conflict (mountain_id, name_ko) do nothing;
 
 delete from public.collection_mountains
 where collection_id in ('forest_service_100', 'bac_100');
@@ -175,11 +210,14 @@ insert into public.collection_mountains (
 select
   seed.collection_id,
   mountain.id,
-  null,
+  point.id,
   seed.display_order,
   seed.source_label
 from collection_membership_seed seed
 join public.mountains mountain on mountain.slug = seed.mountain_slug
+left join public.verification_points point
+  on point.mountain_id = mountain.id
+ and point.name_ko = seed.verification_point_name
 on conflict (collection_id, mountain_id) do update set
   verification_point_id = excluded.verification_point_id,
   display_order = excluded.display_order,
@@ -190,6 +228,8 @@ declare
   forest_count integer;
   bac_count integer;
   shared_count integer;
+  bac_linked_point_count integer;
+  unsafe_pending_point_count integer;
   desired_identity_count integer;
   available_identity_count integer;
 begin
@@ -214,9 +254,38 @@ begin
   where forest.collection_id = 'forest_service_100'
     and bac.collection_id = 'bac_100';
 
+  select count(*) into bac_linked_point_count
+  from public.collection_mountains
+  where collection_id = 'bac_100'
+    and verification_point_id is not null;
+
+  select count(*) into unsafe_pending_point_count
+  from public.collection_mountains membership
+  join public.verification_points point on point.id = membership.verification_point_id
+  where membership.collection_id = 'bac_100'
+    and point.coordinate_status = 'pending'
+    and (
+      point.latitude is not null
+      or point.longitude is not null
+      or point.verification_radius_m is not null
+    );
+
   if available_identity_count = desired_identity_count
-     and (forest_count <> 100 or bac_count <> 100 or shared_count <> 79) then
-    raise exception 'invalid collection membership counts: forest=%, bac=%, shared=%', forest_count, bac_count, shared_count;
+     and (
+       forest_count <> 100
+       or bac_count <> 100
+       or shared_count <> 79
+       or bac_linked_point_count <> 100
+       or unsafe_pending_point_count <> 0
+     )
+  then
+    raise exception
+      'invalid collection seed: forest=%, bac=%, shared=%, bac_points=%, unsafe_pending=%',
+      forest_count,
+      bac_count,
+      shared_count,
+      bac_linked_point_count,
+      unsafe_pending_point_count;
   end if;
 end;
 $$;`;
