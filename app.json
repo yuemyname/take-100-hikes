@@ -42,7 +42,7 @@
         "@kingstinct/react-native-healthkit",
         {
           "NSHealthShareUsageDescription": "Apple Fitness에 기록된 등산 운동의 시간과 거리를 내 100PEAKS 활동에 불러오기 위해 사용해요.",
-          "NSHealthUpdateUsageDescription": false,
+          "NSHealthUpdateUsageDescription": "사용자가 직접 선택한 등산 활동을 Apple 건강 기록으로 저장할 때만 사용해요.",
           "background": false
         }
       ],
