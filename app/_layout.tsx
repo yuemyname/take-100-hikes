@@ -39,6 +39,11 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="mountain/[id]" />
         <Stack.Screen name="user/[id]" />
         <Stack.Screen name="profile/edit" />
+        <Stack.Screen name="activities/index" />
+        <Stack.Screen name="activities/new" />
+        <Stack.Screen name="activities/import" />
+        <Stack.Screen name="activities/link" />
+        <Stack.Screen name="activities/rankings" />
         <Stack.Screen name="certification/capture" />
         <Stack.Screen name="certification/review" />
         <Stack.Screen name="certification/success" />

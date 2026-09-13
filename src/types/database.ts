@@ -7,6 +7,9 @@ export type CertificationMemberStatus = 'invited' | 'confirmed' | 'declined' | '
 export type CollectionId = 'forest_service_100' | 'bac_100';
 export type CoordinateStatus = 'pending' | 'verified' | 'retired';
 export type SocialNotificationType = 'new_follower' | 'mutual_follow' | 'certification_invite';
+export type HikingActivitySource = 'manual' | 'healthkit';
+export type HikingActivityVisibility = 'private' | 'friends' | 'public';
+export type PaceLeaderboardScope = 'friends' | 'public';
 
 export interface Profile {
   id: string;
@@ -128,6 +131,47 @@ export interface Favorite {
   user_id: string;
   mountain_id: string;
   created_at: string;
+}
+
+export interface HikingActivity {
+  id: string;
+  user_id: string;
+  mountain_id: string | null;
+  certification_id: string | null;
+  source: HikingActivitySource;
+  source_workout_id_hash: string | null;
+  started_at: string;
+  ended_at: string;
+  moving_seconds: number;
+  distance_m: number;
+  elevation_gain_m: number | null;
+  note: string | null;
+  visibility: HikingActivityVisibility;
+  ranking_opt_in: boolean;
+  ranking_eligible: boolean;
+  pace_seconds_per_km: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActivityCertificationOption {
+  certificationId: string;
+  mountainId: string;
+  mountainName: string;
+  capturedAt: string;
+}
+
+export interface PaceLeaderboardRow {
+  rank: number;
+  activity_id: string;
+  user_id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  pace_seconds_per_km: number;
+  moving_seconds: number;
+  distance_m: number;
+  started_at: string;
 }
 
 /** Follow relation from the current user's point of view — spec §7.1. */

@@ -111,8 +111,20 @@ The client cannot write rank or computed pace fields directly. A server query/vi
 1. `리스트 / 지도` catalog presentation. **Implemented 2026-09-11.**
 2. Create a public mountain display/trailhead location model; do not reuse certification targets.
 3. Add the restaurant Edge Function and mountain-detail section after the provider key is configured.
-4. Add the private hiking-activity schema, RLS, manual diary, and privacy controls.
-5. Add read-only HealthKit import and ship a new TestFlight build.
-6. Add server-computed, opt-in pace ranking and abuse/duplicate checks.
+4. Add the private hiking-activity schema, RLS, manual diary, and privacy controls. **Implemented 2026-09-13.**
+5. Add read-only HealthKit import and ship a new TestFlight build. **Implemented in source 2026-09-13; native-device validation requires the next TestFlight build.**
+6. Add server-computed, opt-in pace ranking and abuse/duplicate checks. **Implemented 2026-09-13.**
+
+Current HealthKit and ranking behavior:
+
+- only HealthKit workouts whose activity type is `hiking` are offered,
+- the import permission is read-only and requests workout summaries only,
+- only start/end time, duration, distance, and available elevation gain are sent to Supabase,
+- raw workout UUIDs are SHA-256 hashed before upload; the hash is owner-only and raw routes, heart rate, calories, and exact workout identifiers are not stored,
+- imported activities start as `private` and ranking opt-out,
+- a user must connect their own confirmed summit certification before a record can become ranking-eligible,
+- ranking eligibility applies plausibility checks and verifies that the certification time is close to the workout interval,
+- the leaderboard returns one best eligible record per user in `맞팔 친구` or `전체 공개` scope,
+- HealthKit client provenance is not cryptographic attestation; the beta leaderboard remains a reference comparison and needs abuse monitoring before competitive rewards are attached.
 
 The BAC coordinate verification and `verification_points` migration remain safety-critical prerequisites for certification behavior. Discovery pins, restaurants, and activity ranking must never activate a pending BAC verification point.

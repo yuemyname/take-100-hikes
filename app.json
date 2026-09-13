@@ -39,6 +39,14 @@
       "expo-router",
       "expo-notifications",
       [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Apple Fitness에 기록된 등산 운동의 시간과 거리를 내 100PEAKS 활동에 불러오기 위해 사용해요.",
+          "NSHealthUpdateUsageDescription": false,
+          "background": false
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/brand/wordmark-color.png",
@@ -66,7 +74,8 @@
           "cameraPermission": false,
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true

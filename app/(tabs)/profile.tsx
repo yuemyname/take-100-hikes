@@ -53,8 +53,9 @@ export default function ProfileScreen() {
           user={profile.data}
           showCaption
           action={
-            <View style={styles.editProfile}>
+            <View style={styles.profileActions}>
               <SecondaryButton label="프로필 · 홈 배경 수정" onPress={() => router.push('/profile/edit')} />
+              <SecondaryButton label="등산 활동 기록" onPress={() => router.push('/activities')} />
             </View>
           }
         />
@@ -76,6 +77,6 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', marginTop: spacing.xl },
   gap: { height: spacing.md },
   error: { marginTop: spacing.lg },
-  editProfile: { alignSelf: 'stretch', marginTop: spacing.lg },
+  profileActions: { alignSelf: 'stretch', gap: spacing.sm, marginTop: spacing.lg },
   signOut: { marginTop: spacing.xxxl },
 });
